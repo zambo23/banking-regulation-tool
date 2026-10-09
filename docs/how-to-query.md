@@ -26,7 +26,7 @@ A good prompt covers six elements. The skill fills in sensible defaults for most
 | Element | What to state | Example |
 | --- | --- | --- |
 | **Role and audience** | Who is writing, for whom | "Senior consultant, for the client's board" |
-| **Client facts** | Type of firm, jurisdiction, customers, SA/IRB, size | "P2P lending platform in Ireland, SME borrowers only, 8 staff" |
+| **Client facts** | Type of firm, jurisdiction, customers, SA/IRB, size | "lending platform in Belgium, retail borrowers only, 8 staff" |
 | **Question** | One or more precise questions | "Can it outsource credit scoring? Under what conditions?" |
 | **Scope** | Reference date, what to include or leave out | "Rules in force today; flag what applies within 12 months; ignore AML" |
 | **Sources** | Which layers may be used | "Wiki first, then raw sources; tag the rest To verify" (the default) |
@@ -40,7 +40,7 @@ The fill-in template is in [`.agents/skills/consultation-memo/reference/template
 
 The agent has to guess the type of firm, the country, the rules and the date.
 
-> **Role:** senior consultant. **Client:** P2P lending platform authorised in Ireland, lending to SMEs only, about 8 staff.
+> **Role:** senior consultant. **Client:** lending platform, about 8 staff.
 > **Question:** what are the main regulatory requirements, and when may the platform use external providers (cloud, credit scoring, payments)?
 > **Scope:** rules in force today; flag anything applying within 12 months; AML in one line only.
 
