@@ -29,7 +29,7 @@ An agent here has two jobs:
 | `data/02-wiki/` | the knowledge base | agent |
 | `data/03-output/` | disposable query results: memos, comparisons, reports, slide decks. Subfolders: `reg-watch/` (regulatory watch reports), `graphify-out/` (knowledge graph of the wiki) | agent |
 | `.agents/skills/` | agent skills, e.g. `update-body-of-knowledge`. `.claude/skills` is a symlink to it | developer |
-| `docs/` | user guides (`how-to-*.md`) and prompt templates (`docs/prompts/`) | — |
+| `docs/` | user guides (`how-to-*.md`) and saved prompts (`docs/prompts/`) | — |
 
 `data/` is git-ignored.
 
@@ -157,7 +157,7 @@ If the user allows it, you may also read the raw sources in `data/01-raw` direct
 
 ### Memos and reports (`data/03-output`)
 
-When asked for a memo, report or comparison as a file:
+For a client memo, follow the skill in `.agents/skills/consultation-memo/SKILL.md`: it frames the request, researches, answers in chat and then writes the memo from its HTML template. The conventions below apply to every file output:
 
 - Name it `<YYYY-MM-DD>_<short-name>.<ext>` (kebab-case), directly in `data/03-output/` unless a workflow names a subfolder.
 - Default to a self-contained `.html` file (inline CSS, no external assets, prints cleanly to PDF); use `.md` if asked.
@@ -169,7 +169,7 @@ Outputs are not sources for the wiki unless an article explicitly cites them.
 
 ### Knowledge graph (optional)
 
-The wiki can be turned into a graph with graphify (see `docs/how-to-graphify.md`). Write its output to `data/03-output/graphify-out/`, never inside `data/02-wiki`. The graph is a navigation aid: INFERRED edges are model guesses, and answers still come from the articles and their citations.
+The wiki can be turned into a graph with graphify. Run it from `data/03-output` on `../02-wiki`, and write its output to `data/03-output/graphify-out/`, never inside `data/02-wiki`. The graph is a navigation aid: INFERRED edges are model guesses, and answers still come from the articles and their citations.
 
 ### `audit` / `lint`
 
