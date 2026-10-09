@@ -57,7 +57,7 @@ Start your agent from the repository root. It reads [`AGENTS.md`](AGENTS.md) (Cl
 | Plan a topic | `Propose the sources for "collateral valuation"; flag gaps; don't compile yet.` |
 | Compile | `compile "definition of default"` |
 | Ask | `When can a forborne exposure return to non-defaulted status? Cite the sources.` |
-| Client memo | `Senior consultant; client: P2P lending platform in Ireland, SME borrowers. What are the requirements, and can it outsource credit scoring? Write a memo.` |
+| Client memo | `Senior consultant; client: bank. LGD downturn. Write a memo.` |
 | Health check | `audit`: stale sources, uncompiled changes, broken links, duplicates, gaps |
 
 What the agent does by default:
