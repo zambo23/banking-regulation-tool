@@ -21,17 +21,11 @@ An agent here has two jobs:
 
 ## Repository layout
 
-| Path | Content | Who writes |
-|---|---|---|
-| `src/` | Python download scripts | developer |
-| `data/00-source/*.xlsx` | one register per source: a `documents` sheet (current state) and a `history` sheet (every downloaded version) | scripts only |
-| `data/01-raw/` | downloaded English texts (PDF, HTML, xlsx, …); old versions are kept next to new ones | scripts only |
-| `data/02-wiki/` | the knowledge base | agent |
-| `data/03-output/` | disposable query results: memos, comparisons, reports, slide decks. Subfolders: `reg-watch/` (regulatory watch reports), `graphify-out/` (knowledge graph of the wiki) | agent |
-| `.agents/skills/` | agent skills, e.g. `update-body-of-knowledge`. `.claude/skills` is a symlink to it | developer |
-| `docs/` | user guides (`how-to-*.md`) and saved prompts (`docs/prompts/`) | — |
+Read [docs/folder-structure.md](docs/folder-structure.md) for what lives where, who writes each folder, and how files are named. The essentials:
 
-`data/` is git-ignored.
+- `src/`: the download scripts. `data/00-source/`: the registers. `data/01-raw/`: the downloaded texts. Only the scripts write to these.
+- `data/02-wiki/` and `data/03-output/` are written by the agent.
+- `data/` is git-ignored.
 
 ## Scope: credit risk first
 
@@ -58,12 +52,11 @@ Every claim must make its legal force clear. From most to least binding:
 
 ### Structure
 
-- `index.md`: the entry point. Lists every topic wiki with a one-line description and a link (`[[irb-approach/index|IRB approach]]`). Update it whenever a topic wiki is created or its scope changes.
-- `log.md`: append-only compile log, newest entries at the bottom. Each entry has the date and, for every source processed, its `data/01-raw/...` path, SHA-256 (from the register) and the articles created or updated. It is how the agent knows what has already been compiled.
-- `<topic>/index.md`: a 2–3 line description of the topic wiki, then every article with a one-line description and a `[[link]]`. Update it whenever an article is created, renamed or substantially changed.
-- `<topic>/<article>.md`: one concept, entity, process or act per article.
+The file layout is in [docs/folder-structure.md](docs/folder-structure.md#wiki-data02-wiki). Keep these files up to date:
 
-Folder and file names are lowercase kebab-case English, for example `irb-approach/lgd-downturn.md`.
+- `index.md`: lists every topic wiki with a one-line description and a link (`[[irb-approach/index|IRB approach]]`). Update it whenever a topic wiki is created or its scope changes.
+- `log.md`: append-only. Each entry has the date and, for every source processed, its `data/01-raw/...` path, SHA-256 (from the register) and the articles created or updated. It is how the agent knows what has already been compiled.
+- `<topic>/index.md`: a 2–3 line description of the topic wiki, then every article with a one-line description and a `[[link]]`. Update it whenever an article is created, renamed or substantially changed.
 
 Suggested starting topic wikis (create them as material arrives, not in advance):
 - `regulatory-framework`
@@ -125,11 +118,11 @@ sources:
 
 ### Update sources
 
-Run the download scripts (see [Commands](#commands)); they are safe to run daily. A new version of a document is saved as a new file and logged in the register's `history` sheet; nothing is overwritten. Then run `audit` to find articles that rely on outdated versions.
+Run `python3 src/cli.py update` (see [docs/tooling.md](docs/tooling.md#commands)); it is safe to run daily. A new version of a document is saved as a new file and logged in the register's `history` sheet; nothing is overwritten. Then run `audit` to find articles that rely on outdated versions.
 
 ### Regulatory watch
 
-To check the regulators' RSS feeds and the registers for new material, report what matters for credit risk, and then (after confirmation) download and compile it, follow the skill in `.agents/skills/update-body-of-knowledge/SKILL.md`. Claude Code finds it through the `.claude/skills` symlink.
+To see what is new without downloading anything, run `python3 src/cli.py update --check`. Report the new or changed items that matter for credit risk (see [Scope](#scope-credit-risk-first)) with their legal force, then download and compile them only after the user confirms.
 
 ### `compile <scope>`
 
@@ -157,7 +150,7 @@ If the user allows it, you may also read the raw sources in `data/01-raw` direct
 
 ### Memos and reports (`data/03-output`)
 
-For a client memo, follow the skill in `.agents/skills/consultation-memo/SKILL.md`: it frames the request, researches, answers in chat and then writes the memo from its HTML template. The conventions below apply to every file output:
+For a client memo, the user can start the session with the prompt in [docs/agent-prompt-strategy-regulation.md](docs/agent-prompt-strategy-regulation.md). The conventions below apply to every file output:
 
 - Name it `<YYYY-MM-DD>_<short-name>.<ext>` (kebab-case), directly in `data/03-output/` unless a workflow names a subfolder.
 - Default to a self-contained `.html` file (inline CSS, no external assets, prints cleanly to PDF); use `.md` if asked.
@@ -169,7 +162,7 @@ Outputs are not sources for the wiki unless an article explicitly cites them.
 
 ### Knowledge graph (optional)
 
-The wiki can be turned into a graph with graphify. Run it from `data/03-output` on `../02-wiki`, and write its output to `data/03-output/graphify-out/`, never inside `data/02-wiki`. The graph is a navigation aid: INFERRED edges are model guesses, and answers still come from the articles and their citations.
+The wiki can be turned into a graph with graphify (how to run it: [docs/tooling.md](docs/tooling.md#knowledge-graph)). Its output goes to `data/03-output/graphify-out/`, never inside `data/02-wiki`. The graph is a navigation aid: INFERRED edges are model guesses, and answers still come from the articles and their citations.
 
 ### `audit` / `lint`
 
@@ -206,29 +199,9 @@ When a structural choice is ambiguous (new topic wiki, merge, reorganisation), a
 
 ## Source downloaders (`src/`)
 
-Python 3. Dependencies are in `requirements.txt` (`pip install -r requirements.txt`). Reading references from PDFs needs poppler's `pdftotext`; it is optional. There is no build system, linter or test suite yet.
+`src/cli.py` is the entry point for the downloaders; setup, dependencies and commands are in [docs/tooling.md](docs/tooling.md). In short: install with `uv`, not `pip`, and run `python3 src/cli.py <command>` from the repository root. Shared Excel code lives in `src/register.py`.
 
-### Commands
-
-```bash
-python src/download_isrb.py                          # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
-python src/download_eba_publications.py guidelines   # EBA publications listing filtered on Guidelines
-python src/download_eba_publications.py rts          # same for Draft Regulatory Technical Standards
-python src/download_eba_publications.py its          # same for Draft Implementing Technical Standards
-python src/download_eba_publications.py reports      # same for Reports (~470 items, takes several minutes)
-python src/download_eba_publications.py cp           # same for Consultation papers (~490 items, takes several minutes)
-python src/download_ecb_guides.py                    # ECB Banking Supervision supervisory guides
-# all accept --check: report what is outdated; download and write nothing
-# download_eba_publications.py also accepts --rescan-references: re-read eba_reference for every downloaded file (run after changing EBA_REF)
-```
-
-Re-running a script is how documents get updated. Shared Excel read/write code lives in `src/register.py`. Scripts import it as `from register import ...`, which works because they are run as `python src/<script>.py`.
-
-### Downloaded files
-
-- `eurlex/<SHORT_NAME>/<CELEX>.{pdf,html}`
-- `eba-guidelines/`, `eba-rts/`, `eba-its/`, `eba-reports/`, `eba-consultation-papers/`: `<YYYY>/<date>_<filename>_<doc_id>_v<N>.<ext>`
-- `ecb-guides/<date>_<doc_id>_v<N>.pdf` (`doc_id` is the ECB file name without `.en.pdf`)
+Downloaded file names are listed in [docs/folder-structure.md](docs/folder-structure.md#sources-data00-source-and-data01-raw).
 
 ### EUR-Lex (`download_isrb.py`)
 
@@ -248,7 +221,7 @@ Re-running a script is how documents get updated. Shared Excel read/write code l
 - The listing is the EBA publications page filtered on `document_type`, paged with `&page=N`. Each `article.teaser` links directly to a file (PDF, sometimes xlsx/docx/zip). A few items (Risk Assessment Reports) link to an HTML publication page instead of a file. That page is saved as `.html`, and because it sends no ETag/Last-Modified, its `sha256` is a hash of the normalised `<main>` text, which is compared on every run. The date is in `.link-icon--calendar`; some teasers also carry a "Publication" tag in the same metadata block. EBA's type tagging is loose: some items appear in more than one listing, and the RTS listing contains a few GL/ITS documents.
 - EBA has no version metadata, so the register infers versions:
   - `doc_id` is assigned on first sight and never changes.
-  - A new version is recorded when the same URL returns different ETag / Last-Modified / Content-Length headers and different bytes, or when an item with the same date and title appears under a new URL (a re-upload). Date + title alone isn't unique: one pair occurs twice.
+  - A new version is recorded when the same URL returns different ETag / Last-Modified / Content-Length headers and different bytes, or when an item with the same date and title appears under a new URL (a re-upload). Date + title alone isn't unique: a few pairs occur twice in the registers.
 - `eba_reference` (EBA/<GL|RTS|ITS|REP|CP|…>/YYYY/NN, preferring the listing's own kind) comes from the title, the filename, or page 1 of the PDF via `pdftotext`.
 - `later_same_reference` lists later items with the same reference (consolidated versions, corrigenda), as a hint that a document may be superseded. It is only a hint:
   - EBA has reused a number: EBA/REP/2025/11 appears on two different reports.

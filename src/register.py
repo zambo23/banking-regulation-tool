@@ -13,11 +13,14 @@ def read_sheet(path: Path, sheet: str) -> list[dict]:
     if not path.exists():
         return []
     wb = load_workbook(path, read_only=True)
-    if sheet not in wb.sheetnames:
-        return []
-    rows = wb[sheet].iter_rows(values_only=True)
-    header = next(rows, None) or []
-    return [dict(zip(header, r)) for r in rows if any(v is not None for v in r)]
+    try:
+        if sheet not in wb.sheetnames:
+            return []
+        rows = wb[sheet].iter_rows(values_only=True)
+        header = next(rows, None) or []
+        return [dict(zip(header, r)) for r in rows if any(v is not None for v in r)]
+    finally:
+        wb.close()  # read-only workbooks keep the file open until closed
 
 
 def write_register(path: Path, sheets: dict[str, tuple[list[str], list[dict]]]) -> None:

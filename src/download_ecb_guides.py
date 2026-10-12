@@ -13,8 +13,8 @@ Two kinds of versioning are tracked:
   "history" sheet. Entries that disappear from the list are kept with status "not listed".
 
 Usage:
-    python src/download_ecb_guides.py           # check all guides, download new or changed files
-    python src/download_ecb_guides.py --check   # only report what would change; download and write nothing
+    python3 src/download_ecb_guides.py           # check all guides, download new or changed files
+    python3 src/download_ecb_guides.py --check   # only report what would change; download and write nothing
 """
 
 from __future__ import annotations

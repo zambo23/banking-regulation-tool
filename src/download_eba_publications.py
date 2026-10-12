@@ -1,7 +1,8 @@
 """Download the documents in the EBA publications listing filtered on one document type.
 
-Supported types are listed in PUBLICATION_TYPES (Guidelines, draft RTS, draft ITS, Reports, Consultation papers); each has its own
-register in data/00-source and its own download folder in data/01-raw.
+Supported types are listed in PUBLICATION_TYPES (Guidelines, draft RTS, draft ITS, Reports,
+Consultation papers); each has its own register in data/00-source and its own download folder
+in data/01-raw.
 
 Every item of the listing (all pages) links directly to an English file, mostly the final
 report PDF, sometimes an Excel/Word template or a zip. Each item becomes one document in the
@@ -21,8 +22,8 @@ or consolidated versions, corrigenda) are flagged in "later_same_reference" so p
 superseded texts are easy to spot.
 
 Usage:
-    python src/download_eba_publications.py guidelines        # check all items, download new or changed files
-    python src/download_eba_publications.py rts --check       # only report what would change; download and write nothing
+    python3 src/download_eba_publications.py guidelines        # check all items, download new or changed files
+    python3 src/download_eba_publications.py rts --check       # only report what would change; download and write nothing
 """
 
 from __future__ import annotations

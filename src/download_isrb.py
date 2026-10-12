@@ -12,8 +12,8 @@ last run are downloaded again, older files are kept, and every downloaded versio
 in the "history" sheet of the Excel register.
 
 Usage:
-    python src/download_isrb.py           # check versions and download what is new or missing
-    python src/download_isrb.py --check   # only report which acts are outdated; change nothing
+    python3 src/download_isrb.py           # check versions and download what is new or missing
+    python3 src/download_isrb.py --check   # only report which acts are outdated; change nothing
 """
 
 from __future__ import annotations
@@ -268,11 +268,20 @@ def main() -> int:
 
         if up_to_date or args.check:
             continue
+        fetched = {}
+        try:
+            for kind in FORMATS:
+                urls = pick_items(items[celex], kind)
+                fetched[kind] = (urls, *download(session, urls, DOWNLOAD_DIR / act.short_name / f"{celex}.{kind}"))
+        except requests.RequestException as exc:
+            # keep the previous version's fields, so the register still points to files on disk
+            failures += 1
+            row["status"] = f"error: {exc}"
+            print(f"  ! {act.short_name}: {exc}", file=sys.stderr)
+            continue
         row.update(current_celex=celex, eurlex_url=EURLEX_URL.format(celex=celex),
                    version_date=str(version_date_of(celex) or ""), downloaded_at=now)
-        for kind in FORMATS:
-            urls = pick_items(items[celex], kind)
-            paths, digests = download(session, urls, DOWNLOAD_DIR / act.short_name / f"{celex}.{kind}")
+        for kind, (urls, paths, digests) in fetched.items():
             row[f"{kind}_source_url"] = "; ".join(urls)
             row[f"{kind}_file"] = "; ".join(relative(p) for p in paths)
             row[f"{kind}_sha256"] = "; ".join(digests)

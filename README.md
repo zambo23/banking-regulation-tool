@@ -17,9 +17,9 @@ It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the do
 
 | Source | Script | What is downloaded |
 | --- | --- | --- |
-| EUR-Lex, via the EBA Interactive Single Rulebook act list | `download_isrb.py` | CRR, CRD, BRRD, DORA, … the current consolidated text (or the original act if never amended) |
-| EBA publications | `download_eba_publications.py <type>` | `guidelines`, `rts`, `its`, `reports`, `cp` (consultation papers) |
-| ECB Banking Supervision | `download_ecb_guides.py` | supervisory guides, with superseded editions tracked |
+| EUR-Lex, via the EBA Interactive Single Rulebook act list | `cli.py isrb` (`download_isrb.py`) | CRR, CRD, BRRD, DORA, … the current consolidated text (or the original act if never amended) |
+| EBA publications | `cli.py eba <type>` (`download_eba_publications.py`) | `guidelines`, `rts`, `its`, `reports`, `cp` (consultation papers) |
+| ECB Banking Supervision | `cli.py ecb` (`download_ecb_guides.py`) | supervisory guides, with superseded editions tracked |
 
 The corpus is about 1,400 documents. The wiki deliberately covers **credit risk** first:
 
@@ -30,21 +30,22 @@ Other areas are compiled only on request.
 
 ## Quick start
 
-Requirements: Python 3.10+ and, optionally, [poppler](https://poppler.freedesktop.org/) (`pdftotext`), which the scripts use to read EBA references from PDFs and the agent uses to read PDFs.
+Requirements: Python 3.10+, [uv](https://docs.astral.sh/uv/) and, optionally, [poppler](https://poppler.freedesktop.org/) (`pdftotext`), which the scripts use to read EBA references from PDFs and the agent uses to read PDFs.
 
 ```bash
 git clone git@github.com:zambo23/banking-regulation-tool.git
 cd banking-regulation-tool
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+uv venv && source .venv/bin/activate
+uv pip install -r requirements.txt
 brew install poppler            # macOS; apt install poppler-utils on Debian/Ubuntu
 
-python src/download_isrb.py                          # EU acts (EUR-Lex)
-python src/download_eba_publications.py guidelines   # also: rts, its, reports, cp
-python src/download_ecb_guides.py                    # ECB supervisory guides
+python3 src/cli.py update                 # every downloader, in parallel
+python3 src/cli.py isrb                   # or one source: EU acts (EUR-Lex)
+python3 src/cli.py eba guidelines rts     # EBA publications: guidelines, rts, its, reports, cp
+python3 src/cli.py ecb                    # ECB supervisory guides
 ```
 
-Every script accepts `--check`, which reports what is new or outdated without downloading anything. The scripts are safe to re-run daily. A changed document is saved as a new version next to the old one, and both are logged in the register's `history` sheet.
+Every command accepts `--check`, which reports what is new or outdated without downloading anything. See [`docs/tooling.md`](docs/tooling.md) for all options. The scripts are safe to re-run daily. A changed document is saved as a new version next to the old one, and both are logged in the register's `history` sheet.
 
 `data/` is git-ignored: the downloaded texts and the wiki stay on your machine.
 
@@ -66,17 +67,17 @@ What the agent does by default:
 - separates what it checked against a downloaded text from what it is recalling from its own knowledge, which it marks *To verify*;
 - asks before merging, deleting or reorganising anything in the wiki.
 
-See [`docs/how-to-query.md`](docs/how-to-query.md) for how to write effective prompts and get memos.
+Two ready-made session prompts are in `docs/`: [a regulatory strategy consultant](docs/agent-prompt-strategy-regulation.md) for client questions and memos, and [a weekly LinkedIn post](docs/agent-prompt-linkedin-post.md) on the latest regulatory news.
 
 ## Repository layout
 
 ```text
-src/                    download scripts + shared register code (register.py)
+src/                    download scripts, cli.py (entry point), register.py (shared Excel code)
 data/00-source/         one Excel register per source: `documents` (current) + `history` (all versions)
 data/01-raw/            downloaded texts, never edited; old versions kept next to new ones
 data/02-wiki/           the knowledge base: index.md, log.md, <topic>/<article>.md
 data/03-output/         disposable outputs: memos, reports, graphs
-docs/                   user guides
+docs/                   folder structure, tooling, agent prompts
 AGENTS.md               the rules every agent follows (CLAUDE.md points to it)
 ```
 
