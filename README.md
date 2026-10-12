@@ -2,12 +2,12 @@
 
 A "second brain" for **EU banking regulation, focused on credit risk**.
 
-Python scripts download the official texts from EUR-Lex, the EBA and ECB Banking Supervision, and track every version in Excel registers. An AI coding agent (Claude Code, Codex, …) then compiles those texts into an interlinked Markdown wiki. Every claim is cited to the article or paragraph, its legal force is stated, and it points to the exact file version it relies on. When a source changes, the wiki shows which articles have gone stale.
+Python scripts download the official texts from EUR-Lex, the EBA, ECB Banking Supervision and ESMA, and track every version in Excel registers. An AI coding agent (Claude Code, Codex, …) then compiles those texts into an interlinked Markdown wiki. Every claim is cited to the article or paragraph, its legal force is stated, and it points to the exact file version it relies on. When a source changes, the wiki shows which articles have gone stale.
 
 It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the documents once into a maintained knowledge base, instead of re-reading raw PDFs for every question.
 
 ```text
- EUR-Lex · EBA · ECB          data/00-source            data/02-wiki               data/03-output
+ EUR-Lex · EBA · ECB · ESMA   data/00-source            data/02-wiki               data/03-output
  ─────────────────── ──►  registers (.xlsx)    ──►  interlinked Markdown   ──►  memos, comparisons,
    src/ downloaders       data/01-raw (texts)       wiki, written by the        reports
                           versioned, immutable      agent per AGENTS.md
@@ -20,8 +20,9 @@ It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the do
 | EUR-Lex, via the EBA Interactive Single Rulebook act list | `cli.py isrb` (`download_isrb.py`) | CRR, CRD, BRRD, DORA, … the current consolidated text (or the original act if never amended) |
 | EBA publications | `cli.py eba <type>` (`download_eba_publications.py`) | `guidelines`, `rts`, `its`, `reports`, `cp` (consultation papers) |
 | ECB Banking Supervision | `cli.py ecb` (`download_ecb_guides.py`) | supervisory guides, with superseded editions tracked |
+| ESMA library | `cli.py esma` (`download_esma.py`) | the "Guidelines and Technical standards" section: guidelines, final reports, compliance tables |
 
-The corpus is about 1,400 documents. The wiki deliberately covers **credit risk** first:
+The corpus is about 2,200 documents. The wiki deliberately covers **credit risk** first:
 
 - **core:** the definition of default, the standardised approach, IRB, credit risk mitigation, NPE, provisioning, loan origination, large exposures, counterparty credit risk and securitisation;
 - **context:** own funds, Pillar 2, governance and stress testing, as far as they bear on credit risk.
@@ -43,6 +44,7 @@ python3 src/cli.py update                 # every downloader, in parallel
 python3 src/cli.py isrb                   # or one source: EU acts (EUR-Lex)
 python3 src/cli.py eba guidelines rts     # EBA publications: guidelines, rts, its, reports, cp
 python3 src/cli.py ecb                    # ECB supervisory guides
+python3 src/cli.py esma                   # ESMA guidelines and technical standards
 python3 src/cli.py graph                  # interactive map of the documents and the wiki
 ```
 

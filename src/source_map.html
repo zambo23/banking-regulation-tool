@@ -9,14 +9,14 @@
   --bg: #f7f7f5; --panel: #ffffff; --ink: #1c1d1f; --muted: #6b6f76; --line: #e3e3df;
   --edge: rgba(60, 64, 72, .22); --edge-strong: rgba(30, 32, 36, .75); --focus: #1c1d1f;
   --law: #2f6fdb; --rts-its: #7a4fd6; --guideline: #16916b; --ecb: #c9821b;
-  --report: #8a9099; --consultation: #d1477a; --article: #0e8fa8; --topic: #1c1d1f;
+  --report: #8a9099; --consultation: #d1477a; --esma-other: #9a6a3c; --article: #0e8fa8; --topic: #1c1d1f;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #15161a; --panel: #1d1f24; --ink: #ecedef; --muted: #9a9ea6; --line: #2e3138;
     --edge: rgba(200, 205, 215, .16); --edge-strong: rgba(236, 237, 239, .8); --focus: #ffffff;
     --law: #6a9cf0; --rts-its: #a688ec; --guideline: #3fc193; --ecb: #e8a447;
-    --report: #8f959e; --consultation: #ec79a3; --article: #3cbfd8; --topic: #ecedef;
+    --report: #8f959e; --consultation: #ec79a3; --esma-other: #cf9c6c; --article: #3cbfd8; --topic: #ecedef;
   }
 }
 * { box-sizing: border-box; }
@@ -129,8 +129,8 @@ for (const n of nodes) {
 }
 const topicOf = n => n.kind === "topic" ? n.id.slice(6) : n.kind === "article" ? n.ref.split("/")[0] : null;
 // sectors of the outer ring, in order of legal force
-const SECTORS = ["EUR-Lex acts", "EBA RTS", "EBA ITS", "EBA guidelines", "ECB guides", "EBA reports", "EBA consultations"]
-  .filter(g => groups.includes(g)).concat(groups.filter(g => g !== "Wiki" && !["EUR-Lex acts", "EBA RTS", "EBA ITS", "EBA guidelines", "ECB guides", "EBA reports", "EBA consultations"].includes(g)));
+const ORDER = ["EUR-Lex acts", "EBA RTS", "EBA ITS", "EBA guidelines", "ESMA", "ECB guides", "EBA reports", "EBA consultations"];
+const SECTORS = ORDER.filter(g => groups.includes(g)).concat(groups.filter(g => g !== "Wiki" && !ORDER.includes(g)));
 
 // ---------- filters ----------
 const state = { mode: "wiki", forces: new Set(Object.keys(DATA.forces)), query: "", selected: null, hover: null };

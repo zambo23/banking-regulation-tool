@@ -40,6 +40,7 @@ Use `python3`, not `python`: some machines have no `python` command outside a vi
 python3 src/cli.py update                 # run every downloader in parallel; safe to run daily
 python3 src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
 python3 src/cli.py ecb                    # ECB Banking Supervision supervisory guides
+python3 src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
 python3 src/cli.py eba guidelines rts     # EBA publications listing, one or more of: guidelines, rts, its, reports, cp
 python3 src/cli.py graph                  # interactive source map, see below
 ```
@@ -65,7 +66,7 @@ pdftotext -layout <file> -
 
 `python3 src/cli.py graph` writes `data/03-output/<YYYY-MM-DD>_source-map.html`, a self-contained page (open it in any browser, no network needed) that maps the document collection:
 
-- **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, guidelines, ECB guides, reports, consultations). Documents cited by the wiki sit nearest the centre.
+- **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, EBA guidelines, ESMA, ECB guides, EBA reports, EBA consultations). ESMA documents are coloured by their listed type. Documents cited by the wiki sit nearest the centre.
 - **Inner ring**: the topic wikis and their articles.
 - **Links**, all taken from recorded data: article cites source (frontmatter), article links to article (`[[wikilinks]]`), ECB edition superseded by (`superseded_by`), same EBA reference on a later item (`later_same_reference`, a hint only), act to its upcoming consolidation (`next_celex`).
 - **Views**: documents cited by the wiki (default), plus titles matching a credit-risk word list, or all documents (`…_source-map.html#all`). Filter by legal force, search titles, references and paths, and click any node for its details, file path and links.

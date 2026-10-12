@@ -8,6 +8,7 @@ Usage:
     python3 src/cli.py update --check         # only report what would change; download and write nothing
     python3 src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
     python3 src/cli.py ecb                    # ECB Banking Supervision supervisory guides
+    python3 src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
     python3 src/cli.py eba guidelines rts     # EBA publications listing, one or more types
     python3 src/cli.py eba reports --rescan-references   # re-read eba_reference for every downloaded file
     python3 src/cli.py graph                  # write the source map to data/03-output/<today>_source-map.html
@@ -65,6 +66,7 @@ def main() -> int:
     commands.add_parser("update", parents=[check, sequential], help="run every downloader")
     commands.add_parser("isrb", parents=[check], help="EUR-Lex consolidated texts of the ISRB acts")
     commands.add_parser("ecb", parents=[check], help="ECB supervisory guides")
+    commands.add_parser("esma", parents=[check], help="ESMA guidelines and technical standards")
     eba = commands.add_parser("eba", parents=[check, sequential], help="EBA publications, one or more types")
     eba.add_argument("types", nargs="+", choices=PUBLICATION_TYPES, metavar="type",
                      help=f"one or more of: {', '.join(PUBLICATION_TYPES)}")
@@ -82,11 +84,14 @@ def main() -> int:
         jobs = [job("isrb", "download_isrb.py", *flags)]
     elif args.command == "ecb":
         jobs = [job("ecb", "download_ecb_guides.py", *flags)]
+    elif args.command == "esma":
+        jobs = [job("esma", "download_esma.py", *flags)]
     elif args.command == "eba":
         eba_flags = flags + (["--rescan-references"] if args.rescan_references else [])
         jobs = [job(f"eba {t}", "download_eba_publications.py", t, *eba_flags) for t in args.types]
     else:
-        jobs = [job("isrb", "download_isrb.py", *flags), job("ecb", "download_ecb_guides.py", *flags)]
+        jobs = [job("isrb", "download_isrb.py", *flags), job("ecb", "download_ecb_guides.py", *flags),
+                job("esma", "download_esma.py", *flags)]
         jobs += [job(f"eba {t}", "download_eba_publications.py", t, *flags) for t in PUBLICATION_TYPES]
     return run(jobs, parallel=not getattr(args, "sequential", False))
 

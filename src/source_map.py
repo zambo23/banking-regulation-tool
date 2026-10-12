@@ -41,13 +41,17 @@ EBA_REGISTERS = {
     "eba_reports.xlsx": ("EBA reports", "report"),
     "eba_consultation_papers.xlsx": ("EBA consultations", "consultation"),
 }
+# ESMA library type -> legal force; other types (final reports, compliance tables, reference
+# documents, statements) get their own category, because a final report may hold draft RTS or guidelines
+ESMA_FORCE = {"Guidelines & Recommendations": "guideline", "Consultation Paper": "consultation", "Report": "report"}
 FORCE_LABELS = {
     "law": "Law (EUR-Lex act)",
     "rts-its": "EBA final draft RTS/ITS",
-    "guideline": "EBA guideline (comply-or-explain)",
+    "guideline": "Guideline (EBA, ESMA; comply-or-explain)",
     "ecb": "ECB supervisory guide (not law)",
-    "report": "EBA report (not binding)",
-    "consultation": "EBA consultation (proposal only)",
+    "report": "Report (not binding)",
+    "consultation": "Consultation (proposal only)",
+    "esma-other": "ESMA final report, table or reference",
     "article": "Wiki article",
     "topic": "Topic wiki",
 }
@@ -109,6 +113,13 @@ def read_registers(nodes: dict, edges: list, by_file: dict) -> None:
     for g in guides:
         if g.get("superseded_by"):
             edges.append({"s": f"ecb:{g['doc_id']}", "t": f"ecb:{g['superseded_by']}", "kind": "supersedes"})
+
+    for r in read_sheet(SOURCE_DIR / "esma_library.xlsx", "documents"):
+        add_document(nodes, by_file, f"esma:{r['doc_id']}", files_of(r.get("local_file")),
+                     group="ESMA", force=ESMA_FORCE.get(r.get("doc_type"), "esma-other"),
+                     label=r.get("esma_reference") or r["title"][:40], title=r["title"],
+                     date=r.get("publication_date") or "", ref=r.get("esma_reference") or "",
+                     status=r.get("status") or "", path=r.get("local_file") or "", url=r.get("url") or "")
 
 
 def read_wiki(nodes: dict, edges: list, by_file: dict) -> list[str]:

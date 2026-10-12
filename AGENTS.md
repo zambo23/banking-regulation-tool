@@ -29,11 +29,11 @@ Read [docs/folder-structure.md](docs/folder-structure.md) for what lives where, 
 
 ## Scope: credit risk first
 
-The corpus covers much more than credit risk: about 1,400 documents, including AML, payments, MiCA and DORA. Compile selectively.
+The corpus covers much more than credit risk: about 2,200 documents, including AML, payments, MiCA, DORA and securities-markets rules from ESMA. Compile selectively.
 
 - **Core**: the default definition, the standardised approach and IRB (PD, LGD, EAD/CCF, model governance and validation, internal models), credit risk mitigation, NPE and forbearance, provisioning (the IFRS 9 interplay and the prudential backstop), loan origination and monitoring, large exposures and concentration, counterparty credit risk, securitisation, credit-risk reporting and disclosure.
 - **Context**: own funds, Pillar 2/SREP/ICAAP, internal governance, stress testing. Cover these only as far as they bear on credit risk.
-- **Out of scope unless the user asks**: AML/CFT, payments, crypto-assets, operational resilience, deposit guarantee schemes, resolution.
+- **Out of scope unless the user asks**: AML/CFT, payments, crypto-assets, operational resilience, deposit guarantee schemes, resolution, and most ESMA material (securities markets, funds, investor protection). ESMA documents on securitisation and credit rating agencies can bear on credit risk (securitisation is core; ratings feed the standardised approach).
 
 ### Source authority
 
@@ -47,6 +47,8 @@ Every claim must make its legal force clear. From most to least binding:
 | — | ECB supervisory guides (`ecb-guides/`) | ECB supervisory expectations for significant institutions; not law |
 | — | EBA reports (`eba-reports/`) | analysis and benchmarking; not binding |
 | — | EBA consultation papers (`eba-consultation-papers/`) | **proposals only**; never present them as rules in force |
+| 3 | ESMA guidelines and recommendations (`esma/`, `doc_type` "Guidelines & Recommendations") | comply-or-explain |
+| — | other ESMA documents (`esma/`): final reports, compliance tables, reference documents, consultation papers | by type: a final report may contain final draft RTS/ITS (the adopted text is in EUR-Lex) or final guidelines; a consultation paper is a proposal; compliance tables and reference documents are information |
 
 ## The wiki (`data/02-wiki`)
 
@@ -176,7 +178,8 @@ A health check of the wiki. Report:
   - a newer `_vN` file of the same document;
   - an ISRB act whose `current_celex` has changed;
   - an ECB guide with `edition_status=superseded`;
-  - an EBA item with `later_same_reference`, or with `status=not listed`.
+  - an EBA item with `later_same_reference`, or with `status=not listed`;
+  - an ESMA item with `status=not listed`.
 - **Uncompiled changes**: sources in scope whose SHA-256 isn't in `log.md`.
 - **Duplicates**: overlapping articles that are candidates for a merge.
 - **Broken links**: `[[wikilinks]]` to articles that don't exist.
@@ -231,6 +234,13 @@ Downloaded file names are listed in [docs/folder-structure.md](docs/folder-struc
   - EBA has reused a number: EBA/REP/2025/11 appears on two different reports.
   - Some covers cite another document ("Report complementing EBA/REP/2021/18").
 - The reference regex separators deliberately exclude newlines. Otherwise a cover line "EBA/Rep/2022" followed by "08 April 2022" would read as EBA/REP/2022/08.
+
+### ESMA library (`download_esma.py`)
+
+- The source is the ESMA library table filtered on section 35, "Guidelines and Technical standards" (`?f[0]=basic_section:35`). Each top-level `tbody` row has `td.views-field-*` cells: `created` (dd/mm/yyyy), `field-document-reference` (the ESMA reference), `title` (link to the document page), `field-document-section`, `field-document-type` and `field-main-document` (the file link). The `Info` cell holds nested tables of related documents and translations; only top-level rows are listings.
+- Paging: `items_per_page=50` with `&page=N`. `items_per_page=100` works for page 0 only; later pages return HTTP 500.
+- `doc_id` is a hash of the document page URL (`/document/<slug>`), which is steadier than the file URL. A new file URL with different bytes is a new version.
+- Change detection uses ETag and Last-Modified only: ESMA answers HEAD requests with `Content-Length: 0`.
 
 ### ECB supervisory guides (`download_ecb_guides.py`)
 

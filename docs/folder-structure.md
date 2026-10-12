@@ -41,11 +41,13 @@ The registers and the files they track:
 | `eba_reports.xlsx` | `eba-reports/` | `download_eba_publications.py reports` |
 | `eba_consultation_papers.xlsx` | `eba-consultation-papers/` | `download_eba_publications.py cp` |
 | `ecb_supervisory_guides.xlsx` | `ecb-guides/` | `download_ecb_guides.py` |
+| `esma_library.xlsx` | `esma/` | `download_esma.py` |
 
 File names in `data/01-raw`:
 
 - `eurlex/<SHORT_NAME>/<CELEX>.{pdf,html}`, e.g. `eurlex/CRR/02013R0575-20260626.pdf`
 - `eba-<type>/<YYYY>/<date>_<filename>_<doc_id>_v<N>.<ext>`
+- `esma/<YYYY>/<date>_<filename>_<doc_id>_v<N>.<ext>`
 - `ecb-guides/<date>_<doc_id>_v<N>.pdf` (`doc_id` is the ECB file name without `.en.pdf`, with a `~` suffix when two entries share a file name)
 
 A new version is saved as a new file (a new CELEX or `_vN`), never over the old one. The registers track files by path, so never rename, move or edit anything in `data/01-raw`.
