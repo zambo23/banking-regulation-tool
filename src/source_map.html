@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source map</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --ink: #1c1d1f; --muted: #6b6f76; --line: #e3e3df;
+  --edge: rgba(60, 64, 72, .22); --edge-strong: rgba(30, 32, 36, .75); --focus: #1c1d1f;
+  --law: #2f6fdb; --rts-its: #7a4fd6; --guideline: #16916b; --ecb: #c9821b;
+  --report: #8a9099; --consultation: #d1477a; --article: #0e8fa8; --topic: #1c1d1f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --panel: #1d1f24; --ink: #ecedef; --muted: #9a9ea6; --line: #2e3138;
+    --edge: rgba(200, 205, 215, .16); --edge-strong: rgba(236, 237, 239, .8); --focus: #ffffff;
+    --law: #6a9cf0; --rts-its: #a688ec; --guideline: #3fc193; --ecb: #e8a447;
+    --report: #8f959e; --consultation: #ec79a3; --article: #3cbfd8; --topic: #ecedef;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+       display: grid; grid-template: auto 1fr / 280px 1fr 320px; }
+header { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 16px; padding: 12px 16px;
+         border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+header h1 { font-size: 16px; margin: 0; }
+header .stats { color: var(--muted); font-size: 13px; }
+aside { background: var(--panel); overflow-y: auto; padding: 14px 16px; }
+#controls { border-right: 1px solid var(--line); }
+#detail { border-left: 1px solid var(--line); }
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; }
+h2:first-child { margin-top: 0; }
+input[type=search] { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px;
+                     background: var(--bg); color: var(--ink); font: inherit; }
+label { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+label .count { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.swatch { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.swatch.square { border-radius: 2px; }
+.swatch.diamond { transform: rotate(45deg); border-radius: 1px; width: 9px; height: 9px; }
+.edge-key { width: 22px; height: 0; border-top: 2px solid var(--muted); flex: none; }
+.note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+main { position: relative; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+canvas.dragging { cursor: grabbing; }
+#tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line);
+       padding: 4px 8px; border-radius: 6px; font-size: 12px; max-width: 320px; display: none;
+       box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+#fit { position: absolute; right: 12px; bottom: 12px; padding: 6px 10px; border: 1px solid var(--line);
+       border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; }
+#detail .empty { color: var(--muted); }
+#detail h3 { margin: 0 0 6px; font-size: 15px; line-height: 1.35; }
+#detail dl { margin: 10px 0; display: grid; grid-template-columns: 76px 1fr; gap: 4px 10px; font-size: 13px; }
+#detail dt { color: var(--muted); }
+#detail dd { margin: 0; overflow-wrap: anywhere; }
+#detail code { font-size: 12px; }
+#detail ul { margin: 4px 0 0; padding-left: 18px; }
+#detail li { margin: 2px 0; }
+#detail button.link { all: unset; color: var(--law); cursor: pointer; }
+#detail button.link:hover, #detail a:hover { text-decoration: underline; }
+#detail a { color: var(--law); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; border: 1px solid var(--line); }
+@media (max-width: 900px) {
+  body { grid-template: auto auto 60vh auto / 1fr; }
+  #controls { border-right: 0; border-bottom: 1px solid var(--line); max-height: 40vh; }
+  #detail { border-left: 0; border-top: 1px solid var(--line); }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Source map</h1>
+  <span class="stats" id="stats"></span>
+</header>
+
+<aside id="controls">
+  <h2>Search</h2>
+  <input type="search" id="search" placeholder="Title, reference or file" autocomplete="off">
+  <p class="note" id="search-note"></p>
+
+  <h2>Documents shown</h2>
+  <label><input type="radio" name="mode" value="wiki" checked> Cited by the wiki <span class="count" id="n-wiki"></span></label>
+  <label><input type="radio" name="mode" value="credit"> + credit-risk keyword in title <span class="count" id="n-credit"></span></label>
+  <label><input type="radio" name="mode" value="all"> All documents <span class="count" id="n-all"></span></label>
+  <p class="note">The keyword filter matches titles against a fixed word list. It is a browsing aid, not a classification.</p>
+
+  <h2>Legal force</h2>
+  <div id="forces"></div>
+
+  <h2>Links</h2>
+  <div id="edge-keys"></div>
+</aside>
+
+<main>
+  <canvas id="map"></canvas>
+  <div id="tip"></div>
+  <button id="fit" type="button">Fit view</button>
+</main>
+
+<aside id="detail"><p class="empty">Select a node to see its details. Scroll to zoom, drag to pan.</p></aside>
+
+<script>
+const DATA = /*DATA*/null;
+
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const EDGE_KINDS = {
+  cites:      { label: "article cites source", dash: [], width: 1.1 },
+  link:       { label: "article links to article", dash: [], width: .7 },
+  topic:      { label: "article in topic wiki", dash: [], width: .7 },
+  supersedes: { label: "ECB edition superseded by", dash: [6, 4], width: 1.6, color: "--ecb" },
+  "same-ref": { label: "same EBA reference, later item (hint)", dash: [2, 3], width: 1.3, color: "--consultation" },
+  upcoming:   { label: "act → upcoming consolidation", dash: [6, 4], width: 1.6, color: "--law" },
+};
+const SHAPE = { article: "square", topic: "diamond" };
+
+// ---------- data ----------
+const nodes = DATA.nodes, byId = new Map(nodes.map(n => [n.id, n]));
+const edges = DATA.edges.map(e => ({ ...e, a: byId.get(e.s), b: byId.get(e.t) }));
+const adj = new Map(nodes.map(n => [n, []]));
+for (const e of edges) { adj.get(e.a).push(e); adj.get(e.b).push(e); }
+const groups = [...new Set(nodes.map(n => n.group))];
+const isDoc = n => n.kind === "doc" || n.kind === "upcoming";
+
+// node size by role; positions come from layout() below
+for (const n of nodes) {
+  n.r = n.kind === "topic" ? 8 : n.kind === "article" ? 4.5 : n.group === "EUR-Lex acts" ? 7 : n.cited ? 5.5 : 3.2;
+  n.x = n.y = n.tx = n.ty = 0;
+}
+const topicOf = n => n.kind === "topic" ? n.id.slice(6) : n.kind === "article" ? n.ref.split("/")[0] : null;
+// sectors of the outer ring, in order of legal force
+const SECTORS = ["EUR-Lex acts", "EBA RTS", "EBA ITS", "EBA guidelines", "ECB guides", "EBA reports", "EBA consultations"]
+  .filter(g => groups.includes(g)).concat(groups.filter(g => g !== "Wiki" && !["EUR-Lex acts", "EBA RTS", "EBA ITS", "EBA guidelines", "ECB guides", "EBA reports", "EBA consultations"].includes(g)));
+
+// ---------- filters ----------
+const state = { mode: "wiki", forces: new Set(Object.keys(DATA.forces)), query: "", selected: null, hover: null };
+const docsCount = f => nodes.filter(n => n.kind === "doc" && f(n)).length;
+document.getElementById("n-wiki").textContent = docsCount(n => n.cited);
+document.getElementById("n-credit").textContent = docsCount(n => n.cited || n.credit);
+document.getElementById("n-all").textContent = docsCount(() => true);
+const docs = nodes.filter(n => n.kind === "doc");
+document.getElementById("stats").textContent =
+  `${docs.length} documents · ${docs.filter(n => n.cited).length} cited by ${nodes.filter(n => n.kind === "article").length} wiki articles · generated ${DATA.generated}`;
+
+const forcesBox = document.getElementById("forces");
+for (const [key, label] of Object.entries(DATA.forces)) {
+  const n = nodes.filter(x => x.force === key && x.kind !== "upcoming").length;
+  const el = document.createElement("label");
+  el.innerHTML = `<input type="checkbox" checked><span class="swatch ${SHAPE[key] || ""}" style="background:var(--${key})"></span>${label}<span class="count">${n}</span>`;
+  el.querySelector("input").addEventListener("change", ev => {
+    ev.target.checked ? state.forces.add(key) : state.forces.delete(key); refresh();
+  });
+  forcesBox.append(el);
+}
+const edgeBox = document.getElementById("edge-keys");
+for (const k of Object.values(EDGE_KINDS)) {
+  const el = document.createElement("label");
+  el.style.cursor = "default";
+  el.innerHTML = `<span class="edge-key" style="border-top-style:${k.dash.length ? (k.dash[0] > 3 ? "dashed" : "dotted") : "solid"};${k.color ? `border-top-color:var(${k.color})` : ""}"></span>${k.label}`;
+  edgeBox.append(el);
+}
+document.querySelectorAll("input[name=mode]").forEach(r => {
+  r.addEventListener("change", ev => { state.mode = ev.target.value; location.hash = state.mode; refresh(); });
+  if (location.hash === `#${r.value}`) { r.checked = true; state.mode = r.value; }  // e.g. source-map.html#all
+});
+const search = document.getElementById("search");
+search.addEventListener("input", () => { state.query = search.value.trim().toLowerCase(); refresh(); });
+
+const matches = n => !state.query || [n.title, n.label, n.ref, n.path].some(v => (v || "").toLowerCase().includes(state.query));
+let visible = [], visibleEdges = [];
+function refresh() {
+  const shown = n => {
+    if (!state.forces.has(n.force)) return false;
+    if (state.query && isDoc(n)) return matches(n);
+    if (!isDoc(n)) return true;
+    return state.mode === "all" || n.cited || (state.mode === "credit" && n.credit) || n.kind === "upcoming";
+  };
+  const set = new Set(nodes.filter(shown));
+  // keep edition chains and same-reference partners of shown documents
+  if (!state.query) for (const e of edges) if (["supersedes", "same-ref", "upcoming"].includes(e.kind)
+      && state.forces.has(e.a.force) && (set.has(e.a) || set.has(e.b))) { set.add(e.a); set.add(e.b); }
+  visible = [...set];
+  visibleEdges = edges.filter(e => set.has(e.a) && set.has(e.b));
+  const hits = state.query ? nodes.filter(n => matches(n)).length : 0;
+  document.getElementById("search-note").textContent = state.query ? `${hits} match${hits === 1 ? "" : "es"}` : "";
+  layout(); fit();
+}
+
+// ---------- layout (deterministic, radial) ----------
+// inner ring: topic wikis with their articles around them; outer ring: one sector per source,
+// documents packed in arcs, cited ones nearest the centre, then credit-risk matches, then newest.
+const INNER = 200, OUTER = 420, STEP = 13, GAP = .07;
+let captions = {}, firstLayout = true;
+function layout() {
+  const topics = [...new Set(visible.filter(n => n.kind === "topic").map(topicOf))].sort();
+  topics.forEach((t, i) => {
+    const a = (i / topics.length) * 2 * Math.PI - Math.PI / 2, cx = Math.cos(a) * INNER, cy = Math.sin(a) * INNER;
+    const topic = byId.get(`topic:${t}`); topic.tx = cx; topic.ty = cy;
+    const arts = visible.filter(n => n.kind === "article" && topicOf(n) === t).sort((p, q) => p.label.localeCompare(q.label));
+    const rad = 22 + arts.length * 2.6;
+    arts.forEach((n, j) => { const b = a + (j / arts.length) * 2 * Math.PI; n.tx = cx + Math.cos(b) * rad; n.ty = cy + Math.sin(b) * rad; });
+  });
+  const bySector = SECTORS.map(g => visible.filter(n => n.group === g && isDoc(n)).sort((p, q) =>
+    (q.cited - p.cited) || (q.kind === "doc") - (p.kind === "doc") || (q.credit - p.credit) || String(q.date).localeCompare(String(p.date))));
+  // acts are few and large: they get one row with wider spacing; other sectors share the rest by size
+  const stepOf = g => g === "EUR-Lex acts" ? 22 : STEP;
+  const used = bySector.filter(l => l.length).length, room = 2 * Math.PI - used * GAP;
+  const fixed = bySector.map((list, i) => SECTORS[i] === "EUR-Lex acts" && list.length ? list.length * stepOf(SECTORS[i]) / OUTER : 0);
+  const weight = bySector.map((list, i) => list.length && !fixed[i] ? Math.max(3, Math.pow(list.length, .6)) : 0);
+  const total = weight.reduce((x, y) => x + y, 0) || 1, free = room - fixed.reduce((x, y) => x + y, 0);
+  const spanOf = i => fixed[i] || (weight[i] / total) * free;
+  let angle = -Math.PI / 2 - spanOf(0) / 2;
+  captions = {};
+  bySector.forEach((list, i) => {
+    if (!list.length) return;
+    const span = spanOf(i), step = stepOf(SECTORS[i]);
+    let k = 0, r = OUTER;
+    while (k < list.length) {
+      const capacity = Math.max(1, Math.floor(span * r / step + 1e-9)), row = list.slice(k, k + capacity);
+      row.forEach((n, j) => {
+        const a = angle + span * (row.length === 1 ? .5 : (j + .5) / capacity + (capacity - row.length) / capacity / 2);
+        n.tx = Math.cos(a) * r; n.ty = Math.sin(a) * r;
+      });
+      k += capacity; r += step;
+    }
+    const mid = angle + span / 2;
+    captions[SECTORS[i]] = { x: Math.cos(mid) * (r + 26), y: Math.sin(mid) * (r + 26), mid };
+    angle += span + GAP;
+  });
+  if (firstLayout) { for (const n of nodes) { n.x = n.tx; n.y = n.ty; } firstLayout = false; }
+}
+
+// ---------- rendering ----------
+const canvas = document.getElementById("map"), ctx = canvas.getContext("2d");
+let view = { k: 1, x: 0, y: 0 }, W = 0, H = 0;
+function resize() {
+  const dpr = window.devicePixelRatio || 1, box = canvas.getBoundingClientRect();
+  W = box.width; H = box.height; canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+new ResizeObserver(() => { resize(); fit(); }).observe(canvas);
+function fit() {
+  if (!visible.length || !W) return;
+  const pts = [...visible.map(n => ({ x: n.tx, y: n.ty })), ...Object.values(captions)], xs = pts.map(n => n.x), ys = pts.map(n => n.y);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  view.k = Math.min(2.5, .9 * Math.min(W / (x1 - x0 + 40), H / (y1 - y0 + 40)));
+  view.x = W / 2 - view.k * (x0 + x1) / 2; view.y = H / 2 - view.k * (y0 + y1) / 2;
+}
+document.getElementById("fit").addEventListener("click", fit);
+
+function neighbours(n) { return new Set(adj.get(n).flatMap(e => [e.a, e.b])); }
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.save(); ctx.translate(view.x, view.y); ctx.scale(view.k, view.k);
+  const focus = state.selected || state.hover, near = focus ? neighbours(focus) : null;
+  const edgeColor = css("--edge"), strong = css("--edge-strong");
+  for (const e of visibleEdges) {
+    const k = EDGE_KINDS[e.kind], on = focus && (e.a === focus || e.b === focus);
+    ctx.strokeStyle = on ? strong : k.color ? css(k.color) : edgeColor;
+    ctx.globalAlpha = focus && !on ? .25 : k.color ? .8 : 1;
+    ctx.lineWidth = (on ? k.width * 1.8 : k.width) / view.k;
+    ctx.setLineDash(k.dash.map(v => v / view.k));
+    ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y);
+    // citations bend towards the centre, which bundles them and keeps the rings readable
+    if (e.kind === "cites") ctx.quadraticCurveTo((e.a.x + e.b.x) * .3, (e.a.y + e.b.y) * .3, e.b.x, e.b.y);
+    else ctx.lineTo(e.b.x, e.b.y);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  for (const n of visible) {
+    const dim = (focus && !near.has(n)) || (state.query && !matches(n));
+    ctx.globalAlpha = dim ? .18 : isDoc(n) && !n.cited && n.kind !== "upcoming" ? .7 : 1;
+    ctx.fillStyle = css(`--${n.force}`);
+    const r = n.r / Math.sqrt(view.k) * 1.2;
+    ctx.beginPath();
+    if (n.kind === "article") ctx.rect(n.x - r, n.y - r, 2 * r, 2 * r);
+    else if (n.kind === "topic") { ctx.moveTo(n.x, n.y - r * 1.4); ctx.lineTo(n.x + r * 1.4, n.y); ctx.lineTo(n.x, n.y + r * 1.4); ctx.lineTo(n.x - r * 1.4, n.y); ctx.closePath(); }
+    else ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
+    if (n.kind === "upcoming") { ctx.lineWidth = 1.5 / view.k; ctx.strokeStyle = ctx.fillStyle; ctx.stroke(); }
+    else ctx.fill();
+    if (n === state.selected) { ctx.lineWidth = 2.5 / view.k; ctx.strokeStyle = css("--focus"); ctx.stroke(); }
+  }
+  // labels: topics and acts always, others when zoomed in or in focus. Outer-ring labels run
+  // radially into the gap between the rings; inner labels sit on the side facing away from the centre.
+  ctx.globalAlpha = 1; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  const ink = css("--ink"), halo = css("--bg");
+  for (const n of visible) {
+    const fewNeighbours = focus && (near.size <= 14 || view.k > 1.4);
+    const show = n.kind === "topic" || n.group === "EUR-Lex acts" || n === focus || (fewNeighbours && near.has(n)) || (view.k > 1.6 && (n.cited || !isDoc(n)));
+    if (!show || (focus && !near.has(n) && n.kind !== "topic")) continue;
+    const size = (n.kind === "topic" ? 13 : 11) / view.k, gap = (n.r * 1.4 + 4) / Math.sqrt(view.k);
+    ctx.font = `${n.kind === "topic" ? "600 " : ""}${size}px system-ui, sans-serif`;
+    let text = n.label, max = isDoc(n) ? 30 : 40;
+    if (text.length > max) text = text.slice(0, max - 1) + "…";
+    ctx.save(); ctx.translate(n.x, n.y);
+    if (isDoc(n)) {
+      const t = Math.atan2(n.y, n.x), left = Math.abs(t) > Math.PI / 2;
+      ctx.rotate(left ? t + Math.PI : t);
+      ctx.textAlign = left ? "left" : "right";
+      ctx.translate(left ? gap : -gap, 0);
+    } else {
+      ctx.textAlign = n.x < -1 ? "right" : "left";
+      ctx.translate(n.x < -1 ? -gap : gap, 0);
+    }
+    ctx.lineWidth = 3.5 / view.k; ctx.strokeStyle = halo; ctx.strokeText(text, 0, 0);
+    ctx.fillStyle = ink; ctx.fillText(text, 0, 0);
+    ctx.restore();
+  }
+  ctx.textAlign = "start";
+  // sector captions just outside the outermost row
+  ctx.font = `600 ${13 / view.k}px system-ui, sans-serif`; ctx.fillStyle = css("--muted"); ctx.textAlign = "center";
+  ctx.lineWidth = 3.5 / view.k; ctx.strokeStyle = css("--bg");
+  for (const [g, c] of Object.entries(captions)) { ctx.strokeText(g, c.x, c.y); ctx.fillText(g, c.x, c.y); }
+  ctx.textAlign = "start"; ctx.restore();
+}
+
+function frame() {
+  for (const n of visible) { n.x += (n.tx - n.x) * .18; n.y += (n.ty - n.y) * .18; }
+  draw(); requestAnimationFrame(frame);
+}
+
+// ---------- interaction ----------
+const tip = document.getElementById("tip");
+const toWorld = (px, py) => ({ x: (px - view.x) / view.k, y: (py - view.y) / view.k });
+function hit(px, py) {
+  const p = toWorld(px, py); let best = null, bestD = Infinity;
+  for (const n of visible) {
+    const d = Math.hypot(n.x - p.x, n.y - p.y), r = (n.r * 1.4 + 4) / Math.sqrt(view.k);
+    if (d < r && d < bestD) { best = n; bestD = d; }
+  }
+  return best;
+}
+let drag = null;
+canvas.addEventListener("pointerdown", ev => { drag = { x: ev.clientX, y: ev.clientY, vx: view.x, vy: view.y, moved: false }; canvas.setPointerCapture(ev.pointerId); });
+canvas.addEventListener("pointermove", ev => {
+  const box = canvas.getBoundingClientRect(), px = ev.clientX - box.left, py = ev.clientY - box.top;
+  if (drag) {
+    const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) { drag.moved = true; canvas.classList.add("dragging"); }
+    view.x = drag.vx + dx; view.y = drag.vy + dy; return;
+  }
+  state.hover = hit(px, py);
+  if (state.hover) {
+    tip.style.display = "block"; tip.textContent = state.hover.title;
+    tip.style.left = Math.min(px + 14, W - 330) + "px"; tip.style.top = (py + 14) + "px";
+  } else tip.style.display = "none";
+});
+canvas.addEventListener("pointerup", ev => {
+  canvas.classList.remove("dragging");
+  if (drag && !drag.moved) {
+    const box = canvas.getBoundingClientRect();
+    select(hit(ev.clientX - box.left, ev.clientY - box.top));
+  }
+  drag = null;
+});
+canvas.addEventListener("pointerleave", () => { state.hover = null; tip.style.display = "none"; });
+canvas.addEventListener("wheel", ev => {
+  ev.preventDefault();
+  const box = canvas.getBoundingClientRect(), px = ev.clientX - box.left, py = ev.clientY - box.top;
+  const k = Math.min(8, Math.max(.1, view.k * Math.exp(-ev.deltaY * .0015)));
+  view.x = px - (px - view.x) * k / view.k; view.y = py - (py - view.y) * k / view.k; view.k = k;
+}, { passive: false });
+
+// ---------- detail panel ----------
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const detail = document.getElementById("detail");
+function listOf(title, items) {
+  if (!items.length) return "";
+  return `<h2>${title}</h2><ul>${items.map(n => `<li><button class="link" data-id="${esc(n.id)}">${esc(n.label)}</button></li>`).join("")}</ul>`;
+}
+function select(n) {
+  state.selected = n;
+  if (!n) { detail.innerHTML = `<p class="empty">Select a node to see its details. Scroll to zoom, drag to pan.</p>`; return; }
+  const out = kind => adj.get(n).filter(e => e.kind === kind && e.a === n).map(e => e.b);
+  const inc = kind => adj.get(n).filter(e => e.kind === kind && e.b === n).map(e => e.a);
+  const rows = [["Type", DATA.forces[n.force]], ["Group", n.group], ["Date", n.date], ["Reference", n.ref], ["Status", n.status],
+                ["File", n.path && `<code>${esc(n.path)}</code>`], ["Source", n.url && `<a href="${esc(n.url)}" target="_blank" rel="noopener">open original</a>`]]
+    .filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${k === "File" || k === "Source" ? v : esc(v)}</dd>`).join("");
+  detail.innerHTML = `<h3>${esc(n.title)}</h3>${n.cited ? `<span class="pill">cited by the wiki</span>` : ""}<dl>${rows}</dl>` +
+    listOf("Cited by", inc("cites")) + listOf("Cites", out("cites")) +
+    listOf("Links to", out("link")) + listOf("Linked from", inc("link")) +
+    listOf("Articles", inc("topic")) + listOf("Topic", out("topic")) +
+    listOf("Superseded by", out("supersedes")) + listOf("Supersedes", inc("supersedes")) +
+    listOf("Later item, same reference", out("same-ref")) + listOf("Earlier item, same reference", inc("same-ref")) +
+    listOf("Upcoming version", out("upcoming"));
+  detail.querySelectorAll("button.link").forEach(b => b.addEventListener("click", () => {
+    const m = byId.get(b.dataset.id);
+    if (!visible.includes(m)) { document.querySelector("input[name=mode][value=all]").checked = true; state.mode = "all"; refresh(); }
+    select(m);
+  }));
+}
+
+resize(); refresh(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

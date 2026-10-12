@@ -67,6 +67,7 @@ A new version is saved as a new file (a new CELEX or `_vN`), never over the old 
 ## Outputs: `data/03-output`
 
 - Files are named `<YYYY-MM-DD>_<short-name>.<ext>` (kebab-case), directly in `data/03-output/` unless a workflow names a subfolder.
+- `<YYYY-MM-DD>_source-map.html`: the source map (`python3 src/cli.py graph`).
 - `linkedin/`: weekly LinkedIn posts (see [agent-prompt-linkedin-post.md](agent-prompt-linkedin-post.md)).
 - `graphify-out/`: the knowledge graph of the wiki. It is never written inside `data/02-wiki`.
 

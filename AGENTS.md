@@ -160,6 +160,10 @@ For a client memo, the user can start the session with the prompt in [docs/agent
 
 Outputs are not sources for the wiki unless an article explicitly cites them.
 
+### Source map
+
+`python3 src/cli.py graph` writes an interactive map of the registers and the wiki to `data/03-output/<YYYY-MM-DD>_source-map.html` (see [docs/tooling.md](docs/tooling.md#source-map)). Every link in it comes from recorded data; use it to see coverage, superseded editions and uncompiled sources, not as a source itself.
+
 ### Knowledge graph (optional)
 
 The wiki can be turned into a graph with graphify (how to run it: [docs/tooling.md](docs/tooling.md#knowledge-graph)). Its output goes to `data/03-output/graphify-out/`, never inside `data/02-wiki`. The graph is a navigation aid: INFERRED edges are model guesses, and answers still come from the articles and their citations.

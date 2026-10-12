@@ -10,6 +10,7 @@ Usage:
     python3 src/cli.py ecb                    # ECB Banking Supervision supervisory guides
     python3 src/cli.py eba guidelines rts     # EBA publications listing, one or more types
     python3 src/cli.py eba reports --rescan-references   # re-read eba_reference for every downloaded file
+    python3 src/cli.py graph                  # write the source map to data/03-output/<today>_source-map.html
 
 EBA types: guidelines, rts, its, reports (~470 items), cp (~490 items). Reports and cp take several minutes.
 """
@@ -69,7 +70,12 @@ def main() -> int:
                      help=f"one or more of: {', '.join(PUBLICATION_TYPES)}")
     eba.add_argument("--rescan-references", action="store_true",
                      help="re-read eba_reference for every downloaded document, not only new or changed ones")
+    graph = commands.add_parser("graph", help="write an interactive map of the documents and the wiki")
+    graph.add_argument("--output", help="where to write the HTML page (default: data/03-output/<today>_source-map.html)")
     args = parser.parse_args()
+
+    if args.command == "graph":
+        return run([job("graph", "source_map.py", *(["--output", args.output] if args.output else []))], parallel=False)
 
     flags = ["--check"] if args.check else []
     if args.command == "isrb":
