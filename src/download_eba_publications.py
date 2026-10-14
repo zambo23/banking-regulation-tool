@@ -22,8 +22,8 @@ or consolidated versions, corrigenda) are flagged in "later_same_reference" so p
 superseded texts are easy to spot.
 
 Usage:
-    python3 src/download_eba_publications.py guidelines        # check all items, download new or changed files
-    python3 src/download_eba_publications.py rts --check       # only report what would change; download and write nothing
+    uv run src/download_eba_publications.py guidelines        # check all items, download new or changed files
+    uv run src/download_eba_publications.py rts --check       # only report what would change; download and write nothing
 """
 
 from __future__ import annotations

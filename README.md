@@ -48,18 +48,17 @@ Requirements: Python 3.10+, [uv](https://docs.astral.sh/uv/) and, optionally, [p
 ```bash
 git clone git@github.com:zambo23/banking-regulation-tool.git
 cd banking-regulation-tool
-uv venv && source .venv/bin/activate
-uv pip install -r requirements.txt
+uv sync                         # create .venv and install the locked dependencies
 brew install poppler            # macOS; apt install poppler-utils on Debian/Ubuntu
 
-python3 src/cli.py update                 # every downloader, in parallel
-python3 src/cli.py isrb                   # or one source: EU acts (EUR-Lex)
-python3 src/cli.py eba guidelines rts     # EBA publications: guidelines, rts, its, reports, cp
-python3 src/cli.py ecb                    # ECB supervisory guides
-python3 src/cli.py esma                   # ESMA guidelines and technical standards
-python3 src/cli.py basel                  # Basel Framework chapters (BCBS standards)
-python3 src/cli.py eba-sr                 # EBA Single Rulebook product pages
-python3 src/cli.py graph                  # interactive map of the documents and the wiki
+uv run src/cli.py update                 # every downloader, in parallel
+uv run src/cli.py isrb                   # or one source: EU acts (EUR-Lex)
+uv run src/cli.py eba guidelines rts     # EBA publications: guidelines, rts, its, reports, cp
+uv run src/cli.py ecb                    # ECB supervisory guides
+uv run src/cli.py esma                   # ESMA guidelines and technical standards
+uv run src/cli.py basel                  # Basel Framework chapters (BCBS standards)
+uv run src/cli.py eba-sr                 # EBA Single Rulebook product pages
+uv run src/cli.py graph                  # interactive map of the documents and the wiki
 ```
 
 Every command accepts `--check`, which reports what is new or outdated without downloading anything. See [`docs/tooling.md`](docs/tooling.md) for all options. The scripts are safe to re-run daily. A changed document is saved as a new version next to the old one, and both are logged in the register's `history` sheet.

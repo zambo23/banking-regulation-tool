@@ -1,0 +1,14 @@
+[project]
+name = "banking-regulation-tool"
+version = "0.1.0"
+description = "A second brain for EU banking regulation and the Basel Framework, focused on credit risk"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "openpyxl>=3.1.5",
+    "requests>=2.34.2",
+]
+
+[tool.uv]
+package = false

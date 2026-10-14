@@ -12,8 +12,8 @@ last run are downloaded again, older files are kept, and every downloaded versio
 in the "history" sheet of the Excel register.
 
 Usage:
-    python3 src/download_isrb.py           # check versions and download what is new or missing
-    python3 src/download_isrb.py --check   # only report which acts are outdated; change nothing
+    uv run src/download_isrb.py           # check versions and download what is new or missing
+    uv run src/download_isrb.py --check   # only report which acts are outdated; change nothing
 """
 
 from __future__ import annotations

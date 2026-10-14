@@ -30,8 +30,8 @@ downloaded and, if its bytes differ, saved as a new version (suffix _vN) and log
 sheet. Documents that disappear from the site are kept with status "not listed".
 
 Usage:
-    python3 src/download_eba_single_rulebook.py           # read all products, download new or changed files
-    python3 src/download_eba_single_rulebook.py --check   # only report what would change; download and write nothing
+    uv run src/download_eba_single_rulebook.py           # read all products, download new or changed files
+    uv run src/download_eba_single_rulebook.py --check   # only report what would change; download and write nothing
 """
 
 from __future__ import annotations

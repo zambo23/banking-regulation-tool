@@ -15,8 +15,8 @@ Basel Framework chapters are listed one node per chapter version, with BIS's sta
 The page is self-contained (inline data, CSS and JavaScript) and opens in any browser.
 
 Usage:
-    python3 src/source_map.py                       # write data/03-output/<today>_source-map.html
-    python3 src/source_map.py --output map.html     # write somewhere else
+    uv run src/source_map.py                       # write data/03-output/<today>_source-map.html
+    uv run src/source_map.py --output map.html     # write somewhere else
 """
 
 from __future__ import annotations

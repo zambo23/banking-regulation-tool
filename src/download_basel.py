@@ -25,8 +25,8 @@ whereas the chapter column is byte-stable, so its SHA-256 identifies the text. T
 server sometimes returns another version of the chapter under the same link.
 
 Usage:
-    python3 src/download_basel.py           # read the timeline, download new current/forthcoming versions
-    python3 src/download_basel.py --check   # only report what would change; download and write nothing
+    uv run src/download_basel.py           # read the timeline, download new current/forthcoming versions
+    uv run src/download_basel.py --check   # only report what would change; download and write nothing
 """
 
 from __future__ import annotations

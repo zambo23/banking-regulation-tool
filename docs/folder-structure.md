@@ -17,7 +17,8 @@ banking-regulation-tool/
 ├── AGENTS.md                rules for agents
 ├── CLAUDE.md                points Claude Code to AGENTS.md
 ├── README.md                project overview
-└── requirements.txt         Python dependencies
+├── pyproject.toml           project metadata and Python dependencies
+└── uv.lock                  exact dependency versions (uv)
 ```
 
 | Path | Content | Who writes |
@@ -75,7 +76,7 @@ A new version is saved as a new file (a new CELEX, Basel version dates or `_vN`)
 ## Outputs: `data/03-output`
 
 - Files are named `<YYYY-MM-DD>_<short-name>.<ext>` (kebab-case), directly in `data/03-output/` unless a workflow names a subfolder.
-- `<YYYY-MM-DD>_source-map.html`: the source map (`python3 src/cli.py graph`).
+- `<YYYY-MM-DD>_source-map.html`: the source map (`uv run src/cli.py graph`).
 - `linkedin/`: weekly LinkedIn posts (see [agent-prompt-linkedin-post.md](agent-prompt-linkedin-post.md)).
 - `graphify-out/`: the knowledge graph of the wiki. It is never written inside `data/02-wiki`.
 

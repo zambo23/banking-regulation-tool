@@ -4,16 +4,16 @@ Each subcommand runs one or more of the download scripts in src/ with the same P
 interpreter. The scripts stay runnable on their own; this only saves remembering them.
 
 Usage:
-    python3 src/cli.py update                 # run every downloader in parallel (safe to run daily)
-    python3 src/cli.py update --check         # only report what would change; download and write nothing
-    python3 src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
-    python3 src/cli.py ecb                    # ECB Banking Supervision supervisory guides
-    python3 src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
-    python3 src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
-    python3 src/cli.py eba-sr                 # EBA Single Rulebook product pages: final guidelines, RTS and ITS with status and dates
-    python3 src/cli.py eba guidelines rts     # EBA publications listing, one or more types
-    python3 src/cli.py eba reports --rescan-references   # re-read eba_reference for every downloaded file
-    python3 src/cli.py graph                  # write the source map to data/03-output/<today>_source-map.html
+    uv run src/cli.py update                 # run every downloader in parallel (safe to run daily)
+    uv run src/cli.py update --check         # only report what would change; download and write nothing
+    uv run src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
+    uv run src/cli.py ecb                    # ECB Banking Supervision supervisory guides
+    uv run src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
+    uv run src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
+    uv run src/cli.py eba-sr                 # EBA Single Rulebook product pages: final guidelines, RTS and ITS with status and dates
+    uv run src/cli.py eba guidelines rts     # EBA publications listing, one or more types
+    uv run src/cli.py eba reports --rescan-references   # re-read eba_reference for every downloaded file
+    uv run src/cli.py graph                  # write the source map to data/03-output/<today>_source-map.html
 
 EBA types: guidelines, rts, its, reports (~470 items), cp (~490 items). Reports and cp take several minutes.
 """
