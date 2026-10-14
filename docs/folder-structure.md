@@ -26,7 +26,7 @@ banking-regulation-tool/
 |---|---|---|
 | `src/` | Python download scripts; `cli.py` is the entry point, shared Excel code is in `register.py` | developer |
 | `data/00-source/*.xlsx` | one register per source: a `documents` sheet (current state) and a `history` sheet (every downloaded version) | scripts only |
-| `data/01-raw/` | downloaded English texts (PDF, HTML, xlsx, …); old versions are kept next to new ones | scripts only |
+| `data/01-raw/` | downloaded texts, English only (translations are recognised and not kept, see [downloaders.md](downloaders.md#english-only)) (PDF, HTML, xlsx, …); old versions are kept next to new ones | scripts only |
 | `data/02-raw-md/` | Markdown versions of the PDF files in `01-raw`, for cheaper reading during `compile` | `convert_pdfs.py` only |
 | `data/03-wiki/` | the knowledge base | agent |
 | `data/04-output/` | disposable query results: memos, comparisons, reports, slide decks | agent |

@@ -60,7 +60,7 @@ uv run src/cli.py graph                  # interactive source map, see below
 - The EBA `reports` (~470 items) and `cp` (~490 items) listings take several minutes.
 - Progress is shown live. Every line is prefixed with the time and the job name (`16:08:23 [esma] ... 50/775 items checked`). Each job logs when it starts and when it finishes, with its duration. Every minute a `[cli] still running: …` line lists the jobs not yet done and how long each has run. The long loops print a progress line every 50 items (every 5 pages while reading a listing), and ESMA logs its rate-limit waits.
 - The same lines are saved to `data/logs/<YYYY-MM-DD_HHMMSS>_<command>.log`, e.g. to see afterwards which job was slow or failed.
-- In parallel mode, each script writes its own register, so jobs don't conflict. The run ends with a per-job summary with durations, and the exit code is non-zero if any job failed. An EBA job exits 1 on any download error, e.g. a dead link on the EBA site.
+- In parallel mode, each script writes its own register, so jobs don't conflict. The run ends with a per-job summary with durations, and the exit code is non-zero if any job failed. An EBA job exits 1 on a download error. A link the EBA site answers with 404 is not an error: it is recorded with status `dead link`, listed once when it breaks, and retried on later runs.
 - The CLI runs the scripts in `src/` as subprocesses with the same interpreter (the project environment, under `uv run`), from the repository root. Each script still runs on its own, e.g. `uv run src/download_eba_publications.py rts --check`. They must be run as `uv run src/<script>.py`: they import the shared Excel code as `from register import ...`, which only resolves that way.
 
 ## Reading PDFs

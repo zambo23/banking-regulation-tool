@@ -6,6 +6,20 @@ How each downloader in `src/` reads its site, versions documents and detects cha
 
 Downloaded file names are listed in [folder-structure.md](folder-structure.md#sources-data00-source-and-data01-raw).
 
+## English only
+
+The library keeps English texts only. EUR-Lex, ECB and Basel downloads are English by construction (an English manifestation, an explicit English link, an English-only site). The EBA publications, the EBA Single Rulebook pages and ESMA also list translations, often under file names with no consistent language code and sometimes under the English title, so `src/language.py` judges each downloaded PDF by the text of its first five pages:
+
+- Cyrillic or Greek script, or more common function words of another EU language than of English, means not English;
+- a language code in the file name (`_bg_tra`, `_FI_COR`, `2011-188pt`, `-enbg_0`, `_dk`, `bg_-_jc_…`) with few English function words means not English;
+- an English table (an annex listing indices or currencies) has few function words in any language, so it counts as English.
+
+Other file types are judged by their name only. A translation is not saved; its register row gets status `not English` and is never downloaded again. A guideline translated as a whole but with an English annex counts as not English: the first pages decide.
+
+## Dead links
+
+The EBA site links some files that no longer exist, mostly old documents. The EBA downloaders record a file answered with HTTP 404 with status `dead link` instead of an error, so it doesn't fail the run (`update` exits 1 only on real errors). It is listed once, when it first breaks, and retried on every run in case the EBA restores it.
+
 ## EUR-Lex (`download_isrb.py`)
 
 - The act list comes from the table at https://www.eba.europa.eu/regulation-and-policy/single-rulebook/interactive-single-rulebook. The EBA link is used only to identify the act, because it can lag behind EUR-Lex.
@@ -36,7 +50,7 @@ Downloaded file names are listed in [folder-structure.md](folder-structure.md#so
 - The EBA publications listing misses the final versions of many older guidelines (e.g. EBA/GL/2017/16, EBA/GL/2019/03, EBA/GL/2017/06). Their final texts are on the Single Rulebook product pages, one page per regulatory product.
 - Listing: there is no sitemap, and a topic page (`/regulation-and-policy/<topic>`) shows only some of its products in the body. The breadcrumb menu (`nav.breadcrumb-sw`, last `li.breadcrumb-sw__item`, its `.breadcrumb-sw__item-children` links) lists all of them. Topics come from the same menu. Product URLs vary: most are `/activities/single-rulebook/regulatory-activities/<topic>/<slug>`, some are at the site root or under `/legacy/`, so take them from the menu, never from a URL pattern.
 - A product has versions (current URL; "Previous versions" `?version=<year>` and "Ongoing versions" in `.activity-versions__buttons` dropdowns) and phases (`.timeline__item`: Consultation, Final Report, Consolidated Document, each `?phase=<name>`; the version URL shows its latest phase). A phase page has a status box (`.box-data__items`: Status, Application date, Compliance deadline) and `.document-download` cards: the English file in `.card-body`, translations in a collapsed list, not downloaded. An amending act becomes the current version while the original stays a previous version, often still in force (definition of default: current 2026 amending report; EBA/GL/2016/07 under `?version=2016`).
-- Consultation phases are skipped; a product only under consultation yields nothing. Products migrated from the old site keep their final texts in the description's "Documents" box (`.well a`), e.g. the downturn LGD guidelines; those links are read too (phase `Documents (product page)`), skipping translation links labelled `bg български`, `en English`, … Old-style links (`/documents/10180/<n>/<name>.pdf/<uuid>`) redirect to the file and end in a UUID, so the file name is taken from the segment with an extension.
+- Consultation phases are skipped; a product only under consultation yields nothing. Products migrated from the old site keep their final texts in the description's "Documents" box (`.well a`), e.g. the downturn LGD guidelines; those links are read too (phase `Documents (product page)`), skipping translation links labelled `bg български`, `en English`, … and links to other sites (national authorities answer scripts with HTTP 403) Old-style links (`/documents/10180/<n>/<name>.pdf/<uuid>`) redirect to the file and end in a UUID, so the file name is taken from the segment with an extension.
 - `doc_id` is a hash of product URL, phase title and card title. A new file version is recorded when the card's URL or "Last update" date changes and the bytes differ; no HEAD requests are needed.
 
 ## ESMA library (`download_esma.py`)
@@ -45,7 +59,7 @@ Downloaded file names are listed in [folder-structure.md](folder-structure.md#so
 - Paging: `items_per_page=50` with `&page=N`. `items_per_page=100` works for page 0 only; later pages return HTTP 500.
 - `doc_id` is a hash of the document page URL (`/document/<slug>`), which is steadier than the file URL. A new file URL with different bytes is a new version.
 - Change detection uses ETag and Last-Modified only: ESMA answers HEAD requests with `Content-Length: 0`.
-- The listing also carries translations of older guidelines as separate rows (about 470 of 775). They are kept with status `translation` and not checked: their file names end or start with a language code in many forms (`_bg_tra`, `_de_cor2`, `2011-188pt`, `-enbg_0`, the non-ISO `cz`/`ee`, `bg_-_jc_…`), and ESMA sometimes gives them the English title. A title with non-ASCII letters catches the rest. Checking them all used to trigger HTTP 429 rate limiting.
+- The listing also carries translations of older guidelines as separate rows (about 480 of 775). Most are recognised before downloading, by a language code in the file name or a non-English title; the rest by their text once downloaded (see [English only](#english-only)). Either way the row gets status `not English` and is never requested again, which also keeps the script clear of ESMA's HTTP 429 rate limit.
 
 ## Basel Framework (`download_basel.py`)
 

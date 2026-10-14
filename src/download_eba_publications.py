@@ -44,6 +44,7 @@ from urllib.parse import unquote, urljoin, urlsplit
 import requests
 from bs4 import BeautifulSoup
 
+from language import is_not_english
 from register import read_sheet, write_register
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -97,6 +98,19 @@ HISTORY_COLUMNS = [
     "doc_id", "version", "publication_date", "title", "url", "etag", "last_modified",
     "content_length", "sha256", "local_file", "change_reason", "downloaded_at",
 ]
+
+
+NOT_ENGLISH = "not English"  # register status of a translation: not downloaded, never retried
+
+DEAD_LINK = "dead link"  # register status when the EBA site answers 404: not counted as a failure, retried next run
+
+
+def is_dead_link(exc: Exception) -> bool:
+    return isinstance(exc, requests.HTTPError) and exc.response is not None and exc.response.status_code == 404
+
+
+class SkipItem(Exception):
+    """Raised for a translation: the item is recorded but its file is not kept."""
 
 
 @dataclass
@@ -274,6 +288,8 @@ def main() -> int:
         reason, fetched = "", None
 
         try:
+            if prev and prev.get("status") == NOT_ENGLISH and prev["url"] == item.url:
+                raise SkipItem  # a translation found earlier: never downloaded again
             if not prev:
                 reason = "new"
             elif prev["url"] != item.url:
@@ -291,6 +307,8 @@ def main() -> int:
 
             if reason and not args.check:
                 content, meta = fetched or download(session, item)
+                if not item.is_page and is_not_english(item.filename, content):
+                    raise SkipItem  # English texts only: a translation is not saved
                 sha = fingerprint(item, content)
                 if prev and sha == prev.get("sha256") and local and local.exists():
                     reason = ""  # headers moved but the bytes are identical: same version
@@ -305,10 +323,16 @@ def main() -> int:
                                     "url": item.url, "change_reason": reason})
                 row.update(meta)
             status = ("new" if not prev else "updated") if reason else "up-to-date"
+        except SkipItem:
+            status, reason = NOT_ENGLISH, ""
+            row.update(local_file="", sha256="")
         except (requests.RequestException, RuntimeError) as exc:
-            failures += 1
-            status = f"error: {exc}"
-            print(f"  ! {item.title[:70]}: {exc}", file=sys.stderr)
+            if is_dead_link(exc):
+                status = DEAD_LINK  # the EBA's own broken link: recorded, not a failure
+            else:
+                failures += 1
+                status = f"error: {exc}"
+                print(f"  ! {item.title[:70]}: {exc}", file=sys.stderr)
 
         row.update(publication_date=item.publication_date, title=item.title, url=item.url,
                    press_release_url=item.press_release_url, file_type=item.extension,
@@ -316,7 +340,8 @@ def main() -> int:
         if not args.check and row.get("local_file") and (status in ("new", "updated") or not row.get("eba_reference") or args.rescan_references):
             row["eba_reference"] = eba_reference(ptype, item, ROOT / row["local_file"])
         statuses[status.split(":")[0]] += 1
-        if status != "up-to-date":
+        repeated = status in (NOT_ENGLISH, DEAD_LINK) and prev and prev.get("status") == status  # known: stay quiet
+        if status != "up-to-date" and not repeated:
             print(f"  {status:10} {item.publication_date} {item.title[:80]}" + (f"  ({reason})" if reason else ""))
 
     listed = {id(r) for r in matched if r}

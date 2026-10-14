@@ -53,6 +53,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from download_eba_publications import EBA_REF
+from language import is_not_english
 from register import read_sheet, write_register
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -70,6 +71,13 @@ FILE_EXTENSION = re.compile(r"\.(pdf|xlsx?|xlsm|docx?|zip|csv)$", re.IGNORECASE)
 # a translation link in a product's document box reads "bg български", "en English", ...
 LANGUAGE_LINK = re.compile(r"^[a-z]{2}\s+\S")
 DOCUMENT_BOX = "Documents (product page)"
+NOT_ENGLISH = "not English"  # register status of a translation: its file is not kept, and it is not retried
+
+DEAD_LINK = "dead link"  # register status when the EBA site answers 404: not counted as a failure, retried next run
+
+
+def is_dead_link(exc: Exception) -> bool:
+    return isinstance(exc, requests.HTTPError) and exc.response is not None and exc.response.status_code == 404
 
 DOCUMENT_COLUMNS = [
     "doc_id", "topic", "product", "product_url", "product_version", "is_current_version", "phase",
@@ -225,7 +233,8 @@ def read_document_box(soup: BeautifulSoup, base: dict, page_url: str) -> list[Do
     """Files listed in the product description's "Documents" box (div.well).
 
     Products migrated from the old site keep their final texts there instead of in a phase, e.g. the
-    downturn LGD guidelines (EBA/GL/2019/03). Translations ("bg български", ...) and web pages are skipped.
+    downturn LGD guidelines (EBA/GL/2019/03). Translations ("bg български", ...), web pages and links to other
+    sites (national authorities, which refuse scripted requests with HTTP 403) are skipped.
     """
     documents = []
     for a in soup.select(".node__header .well a[href], .rich-text .well a[href]"):
@@ -233,7 +242,8 @@ def read_document_box(soup: BeautifulSoup, base: dict, page_url: str) -> list[Do
         url = urljoin(SITE, a["href"])
         path = unquote(urlsplit(url).path)
         is_file = "/sites/default/files/" in path or "/documents/10180/" in path or FILE_EXTENSION.search(path)
-        if not label or LANGUAGE_LINK.match(label) or not is_file:
+        on_eba = urlsplit(url).netloc.lower().endswith("eba.europa.eu")  # not national authorities' sites
+        if not label or LANGUAGE_LINK.match(label) or not is_file or not on_eba:
             continue
         documents.append(Document(**base, phase_title=DOCUMENT_BOX, phase_status="", application_date="",
                                   compliance_deadline="", title=label, last_update="", url=url, page_url=page_url))
@@ -304,8 +314,11 @@ def main() -> int:
         try:
             found += scrape_product(session, topic, product, product_url)
         except requests.RequestException as exc:
-            failures += 1
-            print(f"  ! {product[:70]}: {exc}", file=sys.stderr)
+            if is_dead_link(exc):
+                print(f"  {DEAD_LINK:10} {product[:70]} (product page)")
+            else:
+                failures += 1
+                print(f"  ! {product[:70]}: {exc}", file=sys.stderr)
     print(f"  {len(found)} documents on {len(products)} product pages")
 
     previous = {r["doc_id"]: r for r in read_sheet(REGISTER_PATH, "documents")}
@@ -323,7 +336,9 @@ def main() -> int:
         row = dict(prev) if prev else {"doc_id": doc_id, "version": 0, "first_seen_at": now}
         documents.append(row)
         local = ROOT / row["local_file"] if row.get("local_file") else None
-        if not prev or not prev.get("local_file"):
+        if prev and prev.get("status") == NOT_ENGLISH and prev.get("url") == document.url:
+            reason = None  # a translation found earlier
+        elif not prev or not prev.get("local_file"):
             reason = "new"
         elif local is None or not local.exists():
             reason = "local file missing"
@@ -340,7 +355,9 @@ def main() -> int:
                 if "text/html" in resp.headers.get("Content-Type", ""):
                     raise RuntimeError("server returned an HTML page instead of a document")
                 sha = hashlib.sha256(resp.content).hexdigest()
-                if prev and sha == prev.get("sha256") and local and local.exists():
+                if is_not_english(document.filename, resp.content):
+                    reason = None  # English texts only: a translation is not saved
+                elif prev and sha == prev.get("sha256") and local and local.exists():
                     reason = ""  # new URL or date, same bytes: same version
                 else:
                     version = max(int(row.get("version") or 0) + (0 if reason == "local file missing" else 1), 1)
@@ -353,11 +370,18 @@ def main() -> int:
                                     "phase": document.phase_title, "title": document.title,
                                     "last_update": document.last_update, "url": document.url,
                                     "change_reason": reason})
-            status = ("new" if reason == "new" else "updated") if reason else "up-to-date"
+            if reason is None:
+                status = NOT_ENGLISH
+                row.update(local_file="", sha256="")
+            else:
+                status = ("new" if reason == "new" else "updated") if reason else "up-to-date"
         except (requests.RequestException, RuntimeError) as exc:
-            failures += 1
-            status = f"error: {exc}"
-            print(f"  ! {document.title[:70]}: {exc}", file=sys.stderr)
+            if is_dead_link(exc):
+                status = DEAD_LINK  # the EBA's own broken link: recorded, not a failure
+            else:
+                failures += 1
+                status = f"error: {exc}"
+                print(f"  ! {document.title[:70]}: {exc}", file=sys.stderr)
 
         row.update(topic=document.topic, product=document.product, product_url=document.product_url,
                    product_version=document.product_version,
@@ -370,7 +394,8 @@ def main() -> int:
         if not row.get("eba_reference"):
             row["eba_reference"] = eba_reference(document, None)
         statuses[status.split(":")[0]] += 1
-        if status != "up-to-date" and not (args.check and status == "new"):
+        repeated = status == DEAD_LINK and prev and prev.get("status") == DEAD_LINK  # known: stay quiet
+        if status not in ("up-to-date", NOT_ENGLISH) and not repeated and not (args.check and status == "new"):
             print(f"  {status:10} {document.product[:45]} | {document.title[:50]}" + (f"  ({reason})" if reason else ""))
 
     for doc_id, r in previous.items():

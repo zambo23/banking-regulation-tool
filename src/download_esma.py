@@ -13,8 +13,8 @@ Re-running the script is the update mechanism. A document gets a new version whe
 Content-Length is recorded from the download but not compared: ESMA answers HEAD requests with
 a Content-Length of 0. New versions are saved next to the old ones (suffix _vN) and logged in the
 "history" sheet. Rows that disappear from the listing are kept with status "not listed"; rows
-without a main document are kept with status "no file", and translations (file names such as
-..._bg_tra.pdf, or titles in another language) with status "translation", without downloading them.
+without a main document are kept with status "no file", and translations (recognised by name, title or
+text, see src/language.py) with status "not English", without keeping their files.
 
 Usage:
     uv run src/download_esma.py           # check all items, download new or changed files
@@ -37,6 +37,7 @@ from urllib.parse import unquote, urljoin, urlsplit
 import requests
 from bs4 import BeautifulSoup
 
+from language import is_not_english, name_suggests_translation
 from register import read_sheet, write_register
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -63,13 +64,10 @@ HISTORY_COLUMNS = [
     "content_length", "sha256", "local_file", "change_reason", "downloaded_at",
 ]
 CHANGE_HEADERS = ("etag", "last_modified")  # Content-Length is unreliable on HEAD
-# The listing also carries translations of older guidelines as separate rows. Their file names end in a
-# language code (..._bg_tra.pdf, ..._de_cor2.pdf, 2013-322_hr.pdf, 2011-188pt.pdf, ...-enbg_0.pdf, also
-# the non-ISO cz and ee) or start with one (bg_-_jc_2014_43_...). ESMA sometimes gives a translation the
-# English title, so the file name is checked first; a title with non-ASCII letters catches the rest.
-LANGUAGES = "bg|cs|cz|da|de|ee|el|es|et|fi|fr|ga|hr|hu|it|lt|lv|mt|nl|pl|pt|ro|sk|sl|sv"
-TRANSLATION_NAME = re.compile(
-    rf"(?:^|[_\-\d]|en)(?:{LANGUAGES})(?:[_-](?:tra|cor)\d*)?(?:[_-](?:\d+|bis))?_?$|^(?:{LANGUAGES})_-_", re.IGNORECASE)
+# The listing also carries translations of older guidelines as separate rows. Most are recognised before
+# downloading, by a language code in the file name or a title in another language (src/language.py); the
+# rest by their text once downloaded. Either way the file is not kept and the row gets status NOT_ENGLISH.
+NOT_ENGLISH = "not English"
 RETRIES = 3  # ESMA answers bursts with HTTP 429
 
 
@@ -93,8 +91,7 @@ class Item:
 
     @property
     def is_translation(self) -> bool:
-        stem = self.filename.rpartition(".")[0] or self.filename
-        return bool(TRANSLATION_NAME.search(stem)) or any(c.isalpha() and ord(c) > 127 for c in self.title)
+        return name_suggests_translation(self.filename) or any(c.isalpha() and ord(c) > 127 for c in self.title)
 
     @property
     def extension(self) -> str:
@@ -210,8 +207,9 @@ def main() -> int:
         try:
             if not item.url:
                 status = "no file"
-            elif item.is_translation:
-                status = "translation"  # English texts only; files fetched earlier are kept
+            elif item.is_translation or (prev and prev.get("status") in (NOT_ENGLISH, "translation") and prev.get("url") == item.url):
+                status = NOT_ENGLISH  # English texts only
+                row.update(local_file="", sha256="")
             else:
                 if not prev or not prev.get("local_file"):
                     reason = "new"
@@ -227,7 +225,10 @@ def main() -> int:
                 if reason and not args.check:
                     content, meta = download(session, item.url)
                     sha = hashlib.sha256(content).hexdigest()
-                    if prev and sha == prev.get("sha256") and local and local.exists():
+                    if is_not_english(item.filename, content):
+                        reason = ""  # English texts only: a translation is not saved
+                        row.update(local_file="", sha256="")
+                    elif prev and sha == prev.get("sha256") and local and local.exists():
                         reason = ""  # headers or URL moved but the bytes are identical: same version
                     else:
                         version = max(int(row.get("version") or 0) + (0 if reason == "local file missing" else 1), 1)
@@ -239,7 +240,8 @@ def main() -> int:
                                         "publication_date": item.publication_date, "title": item.title,
                                         "url": item.url, "change_reason": reason})
                     row.update(meta)
-                status = ("new" if not prev or not prev.get("local_file") else "updated") if reason else "up-to-date"
+                status = (NOT_ENGLISH if not args.check and not row.get("local_file") and not reason
+                          else ("new" if not prev or not prev.get("local_file") else "updated") if reason else "up-to-date")
         except (requests.RequestException, RuntimeError) as exc:
             failures += 1
             status = f"error: {exc}"
@@ -249,7 +251,7 @@ def main() -> int:
                    doc_type=item.doc_type, sections=item.sections, file_type=item.extension, url=item.url,
                    page_url=item.page_url, status=status, last_seen_at=now, last_checked_at=now)
         statuses[status.split(":")[0]] += 1
-        if status not in ("up-to-date", "no file", "translation"):
+        if status not in ("up-to-date", "no file", NOT_ENGLISH):
             print(f"  {status:10} {item.publication_date} {item.title[:80]}" + (f"  ({reason})" if reason else ""))
 
     for doc_id, r in previous.items():
