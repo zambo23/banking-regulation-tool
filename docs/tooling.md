@@ -62,15 +62,17 @@ uv run src/cli.py graph                  # interactive source map, see below
 
 ## Reading PDFs
 
+Read the Markdown version in `data/02-raw-md` when there is one (same path, `.md`). Otherwise:
+
 ```bash
 pdftotext -layout <file> -
 ```
 
 ## Source map
 
-`uv run src/cli.py graph` writes `data/03-output/<YYYY-MM-DD>_source-map.html`, a self-contained page (open it in any browser, no network needed) that maps the document collection:
+`uv run src/cli.py graph` writes `data/04-output/<YYYY-MM-DD>_source-map.html`, a self-contained page (open it in any browser, no network needed) that maps the document collection:
 
-- **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, EBA guidelines, ESMA, ECB guides, Basel Framework, EBA reports, EBA consultations). Each Basel chapter version is a separate node. ESMA documents are coloured by their listed type. Documents cited by the wiki sit nearest the centre.
+- **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, EBA guidelines, EBA Single Rulebook, ESMA, ECB guides, Basel Framework, EBA reports, EBA consultations). Each Basel chapter version is a separate node; EBA Single Rulebook documents are coloured by product type (guidelines, technical standards, other). ESMA documents are coloured by their listed type. Documents cited by the wiki sit nearest the centre.
 - **Inner ring**: the topic wikis and their articles.
 - **Links**, all taken from recorded data: article cites source (frontmatter), article links to article (`[[wikilinks]]`), ECB edition superseded by (`superseded_by`), same EBA reference on a later item (`later_same_reference`, a hint only), act to its upcoming consolidation (`next_celex`).
 - **Views**: documents cited by the wiki (default), plus titles matching a credit-risk word list, or all documents (`…_source-map.html#all`). Filter by legal force, search titles, references and paths, and click any node for its details, file path and links.
@@ -79,4 +81,4 @@ Re-run it after updating sources or compiling, so the map reflects the current r
 
 ## Knowledge graph
 
-Run graphify from `data/03-output` on `../02-wiki`, and write its output to `data/03-output/graphify-out/`, never inside `data/02-wiki`. The graph is a navigation aid: INFERRED edges are model guesses, and answers still come from the articles and their citations.
+Run graphify from `data/04-output` on `../03-wiki`, and write its output to `data/04-output/graphify-out/`, never inside `data/03-wiki`. The graph is a navigation aid: INFERRED edges are model guesses, and answers still come from the articles and their citations.

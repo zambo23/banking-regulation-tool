@@ -1,6 +1,6 @@
 # Agent prompt: weekly LinkedIn post on banking regulation
 
-Paste the prompt below once a week, then fill in the request block at the end. The agent finds the week's regulatory news in this repository, proposes angles, and drafts a post in your voice. It follows [AGENTS.md](../AGENTS.md) for sources and legal force; this prompt adds the role, the editorial line and the LinkedIn craft.
+Paste the prompt below once a week, then fill in the request block at the end. The agent finds the week's regulatory news in this repository, proposes angles, and drafts a post in your voice. It follows [AGENTS.md](../AGENTS.md) and [llm-wiki.md](llm-wiki.md) for sources and legal force; this prompt adds the role, the editorial line and the LinkedIn craft.
 
 Run the downloaders first (`uv run src/cli.py update`), so the registers hold this week's publications.
 
@@ -27,7 +27,7 @@ Look for material published in the last 7 days (or since the date given in the r
   rows the last download marked new or updated;
 - anything the request adds (a link, a speech, a supervisory letter).
 Read each candidate (data/01-raw) far enough to understand what actually changes. Use the
-wiki (data/02-wiki) for background: what the rule was before, who it hits, what is coming.
+wiki (data/03-wiki) for background: what the rule was before, who it hits, what is coming.
 
 STEP 2 - PROPOSE ANGLES
 Give me three candidate posts, best first. For each:
@@ -70,10 +70,10 @@ Then give me:
 
 STEP 4 - SAVE
 Save the final post, the alternatives and the claims list to
-data/03-output/linkedin/<YYYY-MM-DD>_<short-name>.md.
+data/04-output/linkedin/<YYYY-MM-DD>_<short-name>.md.
 
 OVER TIME
-- Before proposing angles, read the earlier posts in data/03-output/linkedin/ and avoid
+- Before proposing angles, read the earlier posts in data/04-output/linkedin/ and avoid
   repeating a topic or format from the last four weeks.
 - Rotate formats: "what changes on Monday", "three things the press release does not
   say", "draft vs final: what moved", "the deadline nobody is talking about", "myth vs

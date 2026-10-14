@@ -1,4 +1,4 @@
-"""Write an interactive map of the source collection to data/03-output/<date>_source-map.html.
+"""Write an interactive map of the source collection to data/04-output/<date>_source-map.html.
 
 Nodes are the documents in the registers (data/00-source), the wiki articles and their topic
 wikis. Edges come only from recorded facts:
@@ -15,7 +15,7 @@ Basel Framework chapters are listed one node per chapter version, with BIS's sta
 The page is self-contained (inline data, CSS and JavaScript) and opens in any browser.
 
 Usage:
-    uv run src/source_map.py                       # write data/03-output/<today>_source-map.html
+    uv run src/source_map.py                       # write data/04-output/<today>_source-map.html
     uv run src/source_map.py --output map.html     # write somewhere else
 """
 
@@ -33,8 +33,8 @@ from register import read_sheet
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIR = ROOT / "data" / "00-source"
-WIKI_DIR = ROOT / "data" / "02-wiki"
-OUTPUT_DIR = ROOT / "data" / "03-output"
+WIKI_DIR = ROOT / "data" / "03-wiki"
+OUTPUT_DIR = ROOT / "data" / "04-output"
 
 # register file -> (group shown in the map, legal force)
 EBA_REGISTERS = {
@@ -160,14 +160,14 @@ def read_wiki(nodes: dict, edges: list, by_file: dict) -> list[str]:
         if topic_id not in nodes:
             nodes[topic_id] = {"id": topic_id, "kind": "topic", "group": "Wiki", "force": "topic", "label": topic,
                                "title": f"Topic wiki: {topic}", "date": "", "ref": "", "status": "",
-                               "path": f"data/02-wiki/{topic}/index.md", "url": "", "credit": True, "cited": False}
+                               "path": f"data/03-wiki/{topic}/index.md", "url": "", "credit": True, "cited": False}
         h1 = re.search(r"(?m)^# (.+)$", text)
         updated = re.search(r"(?m)^updated: (\S+)", text)
         title = h1.group(1) if h1 else name
         node_id = f"article:{name}"
         nodes[node_id] = {"id": node_id, "kind": "article", "group": "Wiki", "force": "article", "label": title,
                           "title": title, "date": updated.group(1) if updated else "", "ref": name, "status": "",
-                          "path": f"data/02-wiki/{name}.md", "url": "", "credit": True, "cited": False}
+                          "path": f"data/03-wiki/{name}.md", "url": "", "credit": True, "cited": False}
         edges.append({"s": node_id, "t": topic_id, "kind": "topic"})
         frontmatter = re.match(r"---\n(.*?)\n---", text, re.S)
         for cited in re.findall(r"path:\s*(\S+)", frontmatter.group(1) if frontmatter else ""):

@@ -17,10 +17,11 @@ Python scripts download the official texts from EUR-Lex, the EBA, ECB Banking Su
 It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the documents once into a maintained knowledge base, instead of re-reading raw PDFs for every question.
 
 ```text
- EUR-Lex·EBA·ECB·ESMA·BIS     data/00-source            data/02-wiki               data/03-output
+ EUR-Lex·EBA·ECB·ESMA·BIS     data/00-source            data/03-wiki               data/04-output
  ─────────────────── ──►  registers (.xlsx)    ──►  interlinked Markdown   ──►  memos, comparisons,
    src/ downloaders       data/01-raw (texts)       wiki, written by the        reports
                           versioned, immutable      agent per AGENTS.md
+                          data/02-raw-md (PDF→md)
 ```
 
 ## What it covers
@@ -67,7 +68,7 @@ Every command accepts `--check`, which reports what is new or outdated without d
 
 ## Working with the agent
 
-Start your agent from the repository root. It reads [`AGENTS.md`](AGENTS.md) (Claude Code reads it through `CLAUDE.md`), which defines the wiki's structure, citation rules and workflows. Then just ask:
+Start your agent from the repository root. It reads [`AGENTS.md`](AGENTS.md) (Claude Code reads it through `CLAUDE.md`), which points to the rules in `docs/`: [the wiki's scope, legal force and citation rules](docs/llm-wiki.md), [the workflows](docs/workflows.md) and [the downloader notes](docs/downloaders.md). Then just ask:
 
 | Goal | Example prompt |
 | --- | --- |
@@ -91,10 +92,11 @@ Ready-made session prompts are in `docs/`: [a regulatory strategy consultant](do
 src/                    download scripts, cli.py (entry point), register.py (shared Excel code), source_map.py (map page)
 data/00-source/         one Excel register per source: `documents` (current) + `history` (all versions)
 data/01-raw/            downloaded texts, never edited; old versions kept next to new ones
-data/02-wiki/           the knowledge base: index.md, log.md, <topic>/<article>.md
-data/03-output/         disposable outputs: memos, reports, graphs
-docs/                   folder structure, tooling, agent prompts
-AGENTS.md               the rules every agent follows (CLAUDE.md points to it)
+data/02-raw-md/         Markdown versions of the PDFs in data/01-raw
+data/03-wiki/           the knowledge base: index.md, log.md, <topic>/<article>.md
+data/04-output/         disposable outputs: memos, reports, graphs
+docs/                   wiki rules, workflows, folder structure, tooling, downloader notes, agent prompts
+AGENTS.md               the entry point every agent reads (CLAUDE.md points to it); links the rules in docs/
 ```
 
 ## Design choices
