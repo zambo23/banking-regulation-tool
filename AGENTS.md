@@ -160,7 +160,7 @@ If the user allows it, you may also read the raw sources in `data/01-raw` direct
 
 ### Memos and reports (`data/03-output`)
 
-For a client memo, the user can start the session with the prompt in [docs/agent-prompt-strategy-regulation.md](docs/agent-prompt-strategy-regulation.md). The conventions below apply to every file output:
+For a client memo, the user can start the session with the prompt in [docs/agent-prompt-strategy-regulation.md](docs/agent-prompt-strategy-regulation.md); for a model validation, with [docs/agent-prompt-model-validator.md](docs/agent-prompt-model-validator.md). The conventions below apply to every file output:
 
 - Name it `<YYYY-MM-DD>_<short-name>.<ext>` (kebab-case), directly in `data/03-output/` unless a workflow names a subfolder.
 - Default to a self-contained `.html` file (inline CSS, no external assets, prints cleanly to PDF); use `.md` if asked.

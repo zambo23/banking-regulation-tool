@@ -80,7 +80,7 @@ What the agent does by default:
 - separates what it checked against a downloaded text from what it is recalling from its own knowledge, which it marks *To verify*;
 - asks before merging, deleting or reorganising anything in the wiki.
 
-Two ready-made session prompts are in `docs/`: [a regulatory strategy consultant](docs/agent-prompt-strategy-regulation.md) for client questions and memos, and [a weekly LinkedIn post](docs/agent-prompt-linkedin-post.md) on the latest regulatory news.
+Ready-made session prompts are in `docs/`: [a regulatory strategy consultant](docs/agent-prompt-strategy-regulation.md) for client questions and memos, [a credit risk model validator](docs/agent-prompt-model-validator.md) for validation plans and reports, and [a weekly LinkedIn post](docs/agent-prompt-linkedin-post.md) on the latest regulatory news.
 
 ## Repository layout
 
