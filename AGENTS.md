@@ -4,7 +4,10 @@ This file provides guidance to AI agents working in this repository.
 
 ## What this project is
 
-A "second brain" for **EU banking regulation, focused on credit risk**. It follows the LLM Wiki pattern popularised by Andrej Karpathy. Instead of re-reading raw documents for every question, an LLM compiles them once into a persistent, interlinked Markdown wiki and keeps it up to date as sources change.
+A "second brain" for **EU banking regulation, focused on credit risk**. 
+It follows the LLM Wiki pattern popularised by Andrej Karpathy. 
+Instead of re-reading raw documents for every question, an LLM compiles them once into a persistent, 
+interlinked Markdown wiki and keeps it up to date as sources change.
 
 There are three layers:
 
@@ -23,8 +26,11 @@ An agent here has two jobs:
 
 Read [docs/folder-structure.md](docs/folder-structure.md) for what lives where, who writes each folder, and how files are named. The essentials:
 
-- `src/`: the download scripts. `data/00-source/`: the registers. `data/01-raw/`: the downloaded texts. Only the scripts write to these.
-- `data/02-wiki/` and `data/03-output/` are written by the agent.
+- `src/`: the download scripts.
+- `data/00-source/`: the registers.
+- `data/01-raw/`: the downloaded texts. Only the scripts write to these.
+- `data/02-wiki/` This folder is written by the agent.
+- `data/03-output/` This folder is written by the agent.
 - `data/` is git-ignored.
 
 ## Scope: credit risk first
@@ -34,13 +40,13 @@ The corpus covers much more than credit risk: about 2,200 documents, including A
 - **Core**: the default definition, the standardised approach and IRB (PD, LGD, EAD/CCF, model governance and validation, internal models), credit risk mitigation, NPE and forbearance, provisioning (the IFRS 9 interplay and the prudential backstop), loan origination and monitoring, large exposures and concentration, counterparty credit risk, securitisation, credit-risk reporting and disclosure.
 - **Context**: own funds, Pillar 2/SREP/ICAAP, internal governance, stress testing. Cover these only as far as they bear on credit risk.
 - **Out of scope unless the user asks**: AML/CFT, payments, crypto-assets, operational resilience, deposit guarantee schemes, resolution, and most ESMA material (securities markets, funds, investor protection). ESMA documents on securitisation and credit rating agencies can bear on credit risk (securitisation is core; ratings feed the standardised approach).
+- **Basel Framework**: CRE, LEX, the credit-risk chapters of DIS (DIS40–DIS43) and SRP32 are core; SCO, CAP, RBC and the rest of SRP are context; MAR, OPE, LEV, LCR, NSF, MGN and BCP only on request.
 
 ### Source authority
 
 Every claim must make its legal force clear. From most to least binding:
 
 | Level | Sources in this repo | Force |
-- **Basel Framework**: CRE, LEX, the credit-risk chapters of DIS (DIS40–DIS43) and SRP32 are core; SCO, CAP, RBC and the rest of SRP are context; MAR, OPE, LEV, LCR, NSF, MGN and BCP only on request.
 |---|---|---|
 | 1 | CRR, CRD, BRRD, … (`eurlex/`) | law |
 | 2 | delegated and implementing regulations adopting RTS/ITS | law. The EBA files in `eba-rts/` and `eba-its/` are the EBA's **final drafts**; the adopted text is the regulation published in EUR-Lex |
@@ -48,13 +54,13 @@ Every claim must make its legal force clear. From most to least binding:
 | — | ECB supervisory guides (`ecb-guides/`) | ECB supervisory expectations for significant institutions; not law |
 | — | EBA reports (`eba-reports/`) | analysis and benchmarking; not binding |
 | — | EBA consultation papers (`eba-consultation-papers/`) | **proposals only**; never present them as rules in force |
+| — | Basel Framework (`bis-basel/`) | BCBS international standards: **not EU law**. The EU applies them through the CRR/CRD, with its own choices and dates; cite the EU text for what binds an EU bank, and Basel for the international benchmark or a reform not yet transposed. A "Forthcoming" version is agreed but not yet effective |
 | 3 | ESMA guidelines and recommendations (`esma/`, `doc_type` "Guidelines & Recommendations") | comply-or-explain |
 | — | other ESMA documents (`esma/`): final reports, compliance tables, reference documents, consultation papers | by type: a final report may contain final draft RTS/ITS (the adopted text is in EUR-Lex) or final guidelines; a consultation paper is a proposal; compliance tables and reference documents are information |
 
 ## The wiki (`data/02-wiki`)
 
 ### Structure
-| — | Basel Framework (`bis-basel/`) | BCBS international standards: **not EU law**. The EU applies them through the CRR/CRD, with its own choices and dates; cite the EU text for what binds an EU bank, and Basel for the international benchmark or a reform not yet transposed. A "Forthcoming" version is agreed but not yet effective |
 
 The file layout is in [docs/folder-structure.md](docs/folder-structure.md#wiki-data02-wiki). Keep these files up to date:
 
@@ -245,11 +251,6 @@ Downloaded file names are listed in [docs/folder-structure.md](docs/folder-struc
 - `doc_id` is a hash of the document page URL (`/document/<slug>`), which is steadier than the file URL. A new file URL with different bytes is a new version.
 - Change detection uses ETag and Last-Modified only: ESMA answers HEAD requests with `Content-Length: 0`.
 
-### ECB supervisory guides (`download_ecb_guides.py`)
-
-- The guides page is rendered by JavaScript. The list itself is an HTML snippet named in the page's `data-snippets` attribute (`.../supervisoryguides_include.en.html`): `<dt isoDate>` + `<dd>` with `.title a` and an explicit English link `a[lang=en]`.
-- The list keeps old editions next to new ones. `guide_key` (lowercased title without a leading "ECB"/"SSM" and without "- consolidated version") groups them; the newest is `edition_status=current`, and older ones are `superseded` with `superseded_by` pointing to the next edition.
-- Change detection: the `?<hash>` on the title link is a cache key, not the file's MD5, and changes when the file is replaced. The server sends Last-Modified (unreliable: it reflects redeploys) and Content-Length, but no ETag. Any of these changing triggers a download; a new `_vN` version is recorded only if the SHA-256 differs.
 ### Basel Framework (`download_basel.py`)
 
 - Each chapter version has a URL `.../basel-framework/standard/<std>/<nn>/inforce/<effective>/published/<published>`. That date pair is the version key: BIS publishes an amendment under a new published date, so files are never re-checked once saved.
@@ -258,3 +259,8 @@ Downloaded file names are listed in [docs/folder-structure.md](docs/folder-struc
 - Only Current and Forthcoming versions are downloaded. The saved file is the page's chapter column (`div.col-md-7` around `div.chapters-content`) wrapped as a standalone HTML file. The full page is not saved: its bytes and ETag change on every request, while the chapter column is byte-stable.
 - Don't use the chapter PDFs (`.../basel-framework/<node>/chapter.pdf`): they are rendered on request, and the same link sometimes returns a different version of the chapter. The script checks the page's "Effective as of" date against the URL.
 
+### ECB supervisory guides (`download_ecb_guides.py`)
+
+- The guides page is rendered by JavaScript. The list itself is an HTML snippet named in the page's `data-snippets` attribute (`.../supervisoryguides_include.en.html`): `<dt isoDate>` + `<dd>` with `.title a` and an explicit English link `a[lang=en]`.
+- The list keeps old editions next to new ones. `guide_key` (lowercased title without a leading "ECB"/"SSM" and without "- consolidated version") groups them; the newest is `edition_status=current`, and older ones are `superseded` with `superseded_by` pointing to the next edition.
+- Change detection: the `?<hash>` on the title link is a cache key, not the file's MD5, and changes when the file is replaced. The server sends Last-Modified (unreliable: it reflects redeploys) and Content-Length, but no ETag. Any of these changing triggers a download; a new `_vN` version is recorded only if the SHA-256 differs.
