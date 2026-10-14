@@ -41,6 +41,7 @@ python3 src/cli.py update                 # run every downloader in parallel; sa
 python3 src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
 python3 src/cli.py ecb                    # ECB Banking Supervision supervisory guides
 python3 src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
+python3 src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
 python3 src/cli.py eba guidelines rts     # EBA publications listing, one or more of: guidelines, rts, its, reports, cp
 python3 src/cli.py graph                  # interactive source map, see below
 ```
@@ -52,6 +53,7 @@ python3 src/cli.py graph                  # interactive source map, see below
 | `--rescan-references` | `eba` | re-read `eba_reference` for every downloaded file (run after changing `EBA_REF`) |
 
 - Re-running is how documents get updated. A new version is saved as a new file, never over the old one.
+- `basel` reads about 130 timeline pages (one per chapter) on every run, about two minutes; it downloads only versions it has not saved yet.
 - The EBA `reports` (~470 items) and `cp` (~490 items) listings take several minutes.
 - In parallel mode, each script writes its own register, so jobs don't conflict. The run ends with a per-job summary, and the exit code is non-zero if any job failed. An EBA job exits 1 on any download error, e.g. a dead link on the EBA site.
 - The CLI runs the scripts in `src/` as subprocesses with the same interpreter, from the repository root. Each script still runs on its own, e.g. `python3 src/download_eba_publications.py rts --check`. They must be run as `python3 src/<script>.py`: they import the shared Excel code as `from register import ...`, which only resolves that way.
@@ -66,7 +68,7 @@ pdftotext -layout <file> -
 
 `python3 src/cli.py graph` writes `data/03-output/<YYYY-MM-DD>_source-map.html`, a self-contained page (open it in any browser, no network needed) that maps the document collection:
 
-- **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, EBA guidelines, ESMA, ECB guides, EBA reports, EBA consultations). ESMA documents are coloured by their listed type. Documents cited by the wiki sit nearest the centre.
+- **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, EBA guidelines, ESMA, ECB guides, Basel Framework, EBA reports, EBA consultations). Each Basel chapter version is a separate node. ESMA documents are coloured by their listed type. Documents cited by the wiki sit nearest the centre.
 - **Inner ring**: the topic wikis and their articles.
 - **Links**, all taken from recorded data: article cites source (frontmatter), article links to article (`[[wikilinks]]`), ECB edition superseded by (`superseded_by`), same EBA reference on a later item (`later_same_reference`, a hint only), act to its upcoming consolidation (`next_celex`).
 - **Views**: documents cited by the wiki (default), plus titles matching a credit-risk word list, or all documents (`…_source-map.html#all`). Filter by legal force, search titles, references and paths, and click any node for its details, file path and links.

@@ -2,7 +2,7 @@
 
 A "second brain" for **EU banking regulation, focused on credit risk**.
 
-Python scripts download the official texts from EUR-Lex, the EBA, ECB Banking Supervision and ESMA, and track every version in Excel registers. An AI coding agent (Claude Code, Codex, …) then compiles those texts into an interlinked Markdown wiki. Every claim is cited to the article or paragraph, its legal force is stated, and it points to the exact file version it relies on. When a source changes, the wiki shows which articles have gone stale.
+Python scripts download the official texts from EUR-Lex, the EBA, ECB Banking Supervision, ESMA and the Basel Committee (BIS), and track every version in Excel registers. An AI coding agent (Claude Code, Codex, …) then compiles those texts into an interlinked Markdown wiki. Every claim is cited to the article or paragraph, its legal force is stated, and it points to the exact file version it relies on. When a source changes, the wiki shows which articles have gone stale.
 
 It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the documents once into a maintained knowledge base, instead of re-reading raw PDFs for every question.
 
@@ -21,6 +21,7 @@ It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the do
 | EBA publications | `cli.py eba <type>` (`download_eba_publications.py`) | `guidelines`, `rts`, `its`, `reports`, `cp` (consultation papers) |
 | ECB Banking Supervision | `cli.py ecb` (`download_ecb_guides.py`) | supervisory guides, with superseded editions tracked |
 | ESMA library | `cli.py esma` (`download_esma.py`) | the "Guidelines and Technical standards" section: guidelines, final reports, compliance tables |
+| Basel Framework (BIS) | `cli.py basel` (`download_basel.py`) | the BCBS standards, chapter by chapter: current and forthcoming versions, with past versions listed in the register |
 
 The corpus is about 2,200 documents. The wiki deliberately covers **credit risk** first:
 
@@ -45,6 +46,7 @@ python3 src/cli.py isrb                   # or one source: EU acts (EUR-Lex)
 python3 src/cli.py eba guidelines rts     # EBA publications: guidelines, rts, its, reports, cp
 python3 src/cli.py ecb                    # ECB supervisory guides
 python3 src/cli.py esma                   # ESMA guidelines and technical standards
+python3 src/cli.py basel                  # Basel Framework chapters (BCBS standards)
 python3 src/cli.py graph                  # interactive map of the documents and the wiki
 ```
 

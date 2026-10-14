@@ -7,6 +7,8 @@ wikis. Edges come only from recorded facts:
 - an ECB guide edition is superseded by a newer one (`superseded_by`);
 - an EBA item shares its reference with a later item (`later_same_reference`, only a hint);
 - an act has a published, future-dated consolidation (`next_celex`).
+Basel Framework chapters are listed one node per chapter version, with BIS's status
+(Current, Forthcoming, Superseded, Removed on <date>).
 "Credit-risk keyword" is a title match on a fixed word list, a filter aid, not a classification.
 
 The page is self-contained (inline data, CSS and JavaScript) and opens in any browser.
@@ -49,6 +51,7 @@ FORCE_LABELS = {
     "rts-its": "EBA final draft RTS/ITS",
     "guideline": "Guideline (EBA, ESMA; comply-or-explain)",
     "ecb": "ECB supervisory guide (not law)",
+    "basel": "Basel standard (BCBS; not EU law)",
     "report": "Report (not binding)",
     "consultation": "Consultation (proposal only)",
     "esma-other": "ESMA final report, table or reference",
@@ -120,6 +123,13 @@ def read_registers(nodes: dict, edges: list, by_file: dict) -> None:
                      label=r.get("esma_reference") or r["title"][:40], title=r["title"],
                      date=r.get("publication_date") or "", ref=r.get("esma_reference") or "",
                      status=r.get("status") or "", path=r.get("local_file") or "", url=r.get("url") or "")
+
+    for r in read_sheet(SOURCE_DIR / "bis_basel_framework.xlsx", "documents"):
+        add_document(nodes, by_file, f"basel:{r['doc_id']}", files_of(r.get("local_file")),
+                     group="Basel Framework", force="basel", label=f"{r['chapter']} ({r['effective_date']})",
+                     title=f"{r['chapter']} {r.get('chapter_title') or ''}".strip(), date=r.get("published_date") or "",
+                     ref=r["doc_id"], status=r.get("bis_status") or "", path=r.get("local_file") or "",
+                     url=r.get("url") or "")
 
 
 def read_wiki(nodes: dict, edges: list, by_file: dict) -> list[str]:

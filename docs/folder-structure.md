@@ -42,15 +42,17 @@ The registers and the files they track:
 | `eba_consultation_papers.xlsx` | `eba-consultation-papers/` | `download_eba_publications.py cp` |
 | `ecb_supervisory_guides.xlsx` | `ecb-guides/` | `download_ecb_guides.py` |
 | `esma_library.xlsx` | `esma/` | `download_esma.py` |
+| `bis_basel_framework.xlsx` | `bis-basel/` | `download_basel.py` |
 
 File names in `data/01-raw`:
 
 - `eurlex/<SHORT_NAME>/<CELEX>.{pdf,html}`, e.g. `eurlex/CRR/02013R0575-20260626.pdf`
 - `eba-<type>/<YYYY>/<date>_<filename>_<doc_id>_v<N>.<ext>`
 - `esma/<YYYY>/<date>_<filename>_<doc_id>_v<N>.<ext>`
+- `bis-basel/<STANDARD>/<CHAPTER>_<effective date>_<published date>.html`, e.g. `bis-basel/CRE/CRE36_2023-01-01_2022-12-08.html`: the chapter text of one Basel Framework version (paragraphs, footnotes, FAQs), cut from the bis.org page. The two dates come from the BIS URL and identify the version, so there is no `_vN`
 - `ecb-guides/<date>_<doc_id>_v<N>.pdf` (`doc_id` is the ECB file name without `.en.pdf`, with a `~` suffix when two entries share a file name)
 
-A new version is saved as a new file (a new CELEX or `_vN`), never over the old one. The registers track files by path, so never rename, move or edit anything in `data/01-raw`.
+A new version is saved as a new file (a new CELEX, Basel version dates or `_vN`), never over the old one. The registers track files by path, so never rename, move or edit anything in `data/01-raw`.
 
 ## Wiki: `data/02-wiki`
 
