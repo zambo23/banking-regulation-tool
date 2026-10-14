@@ -45,7 +45,9 @@ The registers and the files they track:
 | `eba_its.xlsx` | `eba-its/` | `download_eba_publications.py its` |
 | `eba_reports.xlsx` | `eba-reports/` | `download_eba_publications.py reports` |
 | `eba_consultation_papers.xlsx` | `eba-consultation-papers/` | `download_eba_publications.py cp` |
+| `eba_other_publications.xlsx` | `eba-other/` | `download_eba_publications.py other` |
 | `ecb_supervisory_guides.xlsx` | `ecb-guides/` | `download_ecb_guides.py` |
+| `ecb_supervisory_priorities.xlsx` | `ecb-priorities/` | `download_ecb_priorities.py` |
 | `esma_library.xlsx` | `esma/` | `download_esma.py` |
 | `eba_single_rulebook.xlsx` | `eba-single-rulebook/` | `download_eba_single_rulebook.py` |
 | `bis_basel_framework.xlsx` | `bis-basel/` | `download_basel.py` |
@@ -57,6 +59,7 @@ File names in `data/01-raw`:
 - `esma/<YYYY>/<date>_<filename>_<doc_id>_v<N>.<ext>`
 - `eba-single-rulebook/<topic>/<date>_<filename>_<doc_id>_v<N>.<ext>`, e.g. `eba-single-rulebook/model-validation/2017-11-20_Guidelines_on_PD_and_LGD_estimation_EBA-GL-2017-16_<doc_id>_v1.pdf`. `<topic>` is the Single Rulebook topic in kebab-case, and the date is the document's "Last update" (or the application date)
 - `bis-basel/<STANDARD>/<CHAPTER>_<effective date>_<published date>.html`, e.g. `bis-basel/CRE/CRE36_2023-01-01_2022-12-08.html`: the chapter text of one Basel Framework version (paragraphs, footnotes, FAQs), cut from the bis.org page. The two dates come from the BIS URL and identify the version, so there is no `_vN`
+- `ecb-priorities/<date>_<doc_id>_v<N>.pdf` (`doc_id` is the ECB file name without `.en.pdf`, e.g. `ssm.supervisory_priorities202511`)
 - `ecb-guides/<date>_<doc_id>_v<N>.pdf` (`doc_id` is the ECB file name without `.en.pdf`, with a `~` suffix when two entries share a file name)
 
 A new version is saved as a new file (a new CELEX, Basel version dates or `_vN`), never over the old one. The registers track files by path, so never rename, move or edit anything in `data/01-raw`.

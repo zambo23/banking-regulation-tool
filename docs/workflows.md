@@ -61,7 +61,7 @@ A health check of the wiki. Report:
 - **Stale sources**: articles citing a file that the registers now mark as outdated. That is:
   - a newer `_vN` file of the same document;
   - an ISRB act whose `current_celex` has changed;
-  - an ECB guide with `edition_status=superseded`;
+  - an ECB guide or ECB supervisory priorities edition with `edition_status=superseded`;
   - an EBA item with `later_same_reference`, or with `status=not listed`;
   - an ESMA item with `status=not listed`;
   - an EBA Single Rulebook document with `is_current_version` false (a previous version: check whether the current version amends or replaces it; an amended guideline often stays in force), or with `status=not listed`;

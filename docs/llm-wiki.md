@@ -22,8 +22,10 @@ Every claim must make its legal force clear. From most to least binding:
 | 3 | EBA guidelines (`eba-guidelines/`) | comply-or-explain |
 | by type | EBA Single Rulebook product pages (`eba-single-rulebook/`) | the force of the document: guidelines comply-or-explain, final draft RTS/ITS as above, reports and opinions not binding. The register adds the EBA's own `phase_status` (e.g. "Applicable", "In force"), application date and compliance deadline; prefer it over `eba-guidelines/` for a guideline's status and dates |
 | — | ECB supervisory guides (`ecb-guides/`) | ECB supervisory expectations for significant institutions; not law |
+| — | ECB supervisory priorities (`ecb-priorities/`) | where ECB supervisors will focus over the next three years (reviews, inspections); not law and no new requirement, but they drive SREP findings and measures |
 | — | EBA reports (`eba-reports/`) | analysis and benchmarking; not binding |
 | — | EBA consultation papers (`eba-consultation-papers/`) | **proposals only**; never present them as rules in force |
+| — | EBA other publications (`eba-other/`): work programmes, roadmaps, discussion papers, peer reviews, responses to the Commission | not binding. A work programme lists planned deliverables, not rules; a discussion paper is an early proposal |
 | — | Basel Framework (`bis-basel/`) | BCBS international standards: **not EU law**. The EU applies them through the CRR/CRD, with its own choices and dates; cite the EU text for what binds an EU bank, and Basel for the international benchmark or a reform not yet transposed. A "Forthcoming" version is agreed but not yet effective |
 | 3 | ESMA guidelines and recommendations (`esma/`, `doc_type` "Guidelines & Recommendations") | comply-or-explain |
 | — | other ESMA documents (`esma/`): final reports, compliance tables, reference documents, consultation papers | by type: a final report may contain final draft RTS/ITS (the adopted text is in EUR-Lex) or final guidelines; a consultation paper is a proposal; compliance tables and reference documents are information |

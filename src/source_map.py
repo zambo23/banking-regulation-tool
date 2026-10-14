@@ -43,6 +43,7 @@ EBA_REGISTERS = {
     "eba_guidelines.xlsx": ("EBA guidelines", "guideline"),
     "eba_reports.xlsx": ("EBA reports", "report"),
     "eba_consultation_papers.xlsx": ("EBA consultations", "consultation"),
+    "eba_other_publications.xlsx": ("EBA other", "report"),
 }
 # ESMA library type -> legal force; other types (final reports, compliance tables, reference
 # documents, statements) get their own category, because a final report may hold draft RTS or guidelines
@@ -117,6 +118,16 @@ def read_registers(nodes: dict, edges: list, by_file: dict) -> None:
     for g in guides:
         if g.get("superseded_by"):
             edges.append({"s": f"ecb:{g['doc_id']}", "t": f"ecb:{g['superseded_by']}", "kind": "supersedes"})
+
+    priorities = read_sheet(SOURCE_DIR / "ecb_supervisory_priorities.xlsx", "documents")
+    for e in priorities:
+        add_document(nodes, by_file, f"ecbprio:{e['doc_id']}", files_of(e.get("local_file")),
+                     group="ECB priorities", force="ecb", label=e["title"][-30:], title=e["title"],
+                     date=e.get("publication_date") or "", ref=e.get("edition_status") or "",
+                     status=e.get("status") or "", path=e.get("local_file") or "", url=e.get("url") or "")
+    for e in priorities:
+        if e.get("superseded_by"):
+            edges.append({"s": f"ecbprio:{e['doc_id']}", "t": f"ecbprio:{e['superseded_by']}", "kind": "supersedes"})
 
     for r in read_sheet(SOURCE_DIR / "esma_library.xlsx", "documents"):
         add_document(nodes, by_file, f"esma:{r['doc_id']}", files_of(r.get("local_file")),

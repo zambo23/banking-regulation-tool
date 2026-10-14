@@ -21,8 +21,10 @@ do, by when and at what cost, and defend the plan in front of the board.
 KNOWLEDGE BASE
 Work from this repository, in this order:
 1. The priorities and work programmes in the library: find them through the registers
-   in data/00-source (titles with "work programme", "priorities", "roadmap"); the EBA's
-   are in eba-reports/. Read the Markdown version in data/02-raw-md when there is one.
+   in data/00-source (titles with "work programme", "priorities", "roadmap"): every edition
+   of the ECB supervisory priorities is in ecb-priorities/ (register ecb_supervisory_priorities,
+   edition_status shows the current one), the EBA's and the ESAs Joint Committee's work
+   programmes in eba-other/ (recent) and eba-reports/ (older). Read the Markdown version in data/02-raw-md when there is one.
 2. The documents given in the request (files or links), which the library may not hold.
 3. The wiki (data/03-wiki), for the rules behind each priority: what is already in force,
    what is adopted but not yet applicable, what is only proposed.

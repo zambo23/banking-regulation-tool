@@ -8,6 +8,7 @@ Usage:
     uv run src/cli.py update --check         # only report what would change; download and write nothing
     uv run src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
     uv run src/cli.py ecb                    # ECB Banking Supervision supervisory guides
+    uv run src/cli.py ecb-prio               # ECB supervisory priorities, every edition
     uv run src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
     uv run src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
     uv run src/cli.py eba-sr                 # EBA Single Rulebook product pages: final guidelines, RTS and ITS with status and dates
@@ -16,7 +17,7 @@ Usage:
     uv run src/cli.py eba reports --rescan-references   # re-read eba_reference for every downloaded file
     uv run src/cli.py graph                  # write the source map to data/04-output/<today>_source-map.html
 
-EBA types: guidelines, rts, its, reports (~470 items), cp (~490 items). Reports and cp take several minutes.
+EBA types: guidelines, rts, its, reports (~470 items), cp (~490 items), other (~270 items: work programmes, roadmaps, ...). Reports and cp take several minutes.
 """
 
 from __future__ import annotations
@@ -152,6 +153,7 @@ def main() -> int:
     commands.add_parser("update", parents=[check, sequential], help="run every downloader")
     commands.add_parser("isrb", parents=[check], help="EUR-Lex consolidated texts of the ISRB acts")
     commands.add_parser("ecb", parents=[check], help="ECB supervisory guides")
+    commands.add_parser("ecb-prio", parents=[check], help="ECB supervisory priorities, every edition")
     commands.add_parser("esma", parents=[check], help="ESMA guidelines and technical standards")
     commands.add_parser("basel", parents=[check], help="Basel Framework chapters (BCBS standards)")
     commands.add_parser("eba-sr", parents=[check], help="EBA Single Rulebook product pages (final texts, status, dates)")
@@ -175,6 +177,8 @@ def main() -> int:
         jobs = [job("isrb", "download_isrb.py", *flags)]
     elif args.command == "ecb":
         jobs = [job("ecb", "download_ecb_guides.py", *flags)]
+    elif args.command == "ecb-prio":
+        jobs = [job("ecb prio", "download_ecb_priorities.py", *flags)]
     elif args.command == "esma":
         jobs = [job("esma", "download_esma.py", *flags)]
     elif args.command == "basel":
@@ -188,6 +192,7 @@ def main() -> int:
         jobs = [job(f"eba {t}", "download_eba_publications.py", t, *eba_flags) for t in args.types]
     else:
         jobs = [job("isrb", "download_isrb.py", *flags), job("ecb", "download_ecb_guides.py", *flags),
+                job("ecb prio", "download_ecb_priorities.py", *flags),
                 job("esma", "download_esma.py", *flags), job("basel", "download_basel.py", *flags),
                 job("eba sr", "download_eba_single_rulebook.py", *flags)]
         jobs += [job(f"eba {t}", "download_eba_publications.py", t, *flags) for t in PUBLICATION_TYPES]

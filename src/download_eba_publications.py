@@ -75,6 +75,10 @@ PUBLICATION_TYPES = {
     "cp": PublicationType("Consultation papers", "244", "CP",
                           ROOT / "data" / "00-source" / "eba_consultation_papers.xlsx",
                           ROOT / "data" / "01-raw" / "eba-consultation-papers"),
+    # work programmes, roadmaps, discussion papers on simplification, peer reviews, responses to the EC, ...
+    "other": PublicationType("Other publications", "253", "REP",
+                             ROOT / "data" / "00-source" / "eba_other_publications.xlsx",
+                             ROOT / "data" / "01-raw" / "eba-other"),
 }
 
 LISTING_URL = "https://www.eba.europa.eu/publications-and-media/publications"

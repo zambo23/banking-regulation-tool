@@ -38,10 +38,11 @@ uv sync
 uv run src/cli.py update                 # run every downloader in parallel; safe to run daily
 uv run src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
 uv run src/cli.py ecb                    # ECB Banking Supervision supervisory guides
+uv run src/cli.py ecb-prio               # ECB supervisory priorities, every edition
 uv run src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
 uv run src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
 uv run src/cli.py eba-sr                 # EBA Single Rulebook product pages: final texts with status and dates
-uv run src/cli.py eba guidelines rts     # EBA publications listing, one or more of: guidelines, rts, its, reports, cp
+uv run src/cli.py eba guidelines rts     # EBA publications listing, one or more of: guidelines, rts, its, reports, cp, other
 uv run src/cli.py md                     # convert new PDFs in data/01-raw to Markdown in data/02-raw-md
 uv run src/cli.py graph                  # interactive source map, see below
 ```
@@ -75,7 +76,7 @@ pdftotext -layout <file> -
 
 `uv run src/cli.py graph` writes `data/04-output/<YYYY-MM-DD>_source-map.html`, a self-contained page (open it in any browser, no network needed) that maps the document collection:
 
-- **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, EBA guidelines, EBA Single Rulebook, ESMA, ECB guides, Basel Framework, EBA reports, EBA consultations). Each Basel chapter version is a separate node; EBA Single Rulebook documents are coloured by product type (guidelines, technical standards, other). ESMA documents are coloured by their listed type. Documents cited by the wiki sit nearest the centre.
+- **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, EBA guidelines, EBA Single Rulebook, ESMA, ECB guides, ECB priorities, Basel Framework, EBA reports, EBA other publications, EBA consultations). Each Basel chapter version is a separate node; EBA Single Rulebook documents are coloured by product type (guidelines, technical standards, other). ESMA documents are coloured by their listed type. Documents cited by the wiki sit nearest the centre.
 - **Inner ring**: the topic wikis and their articles.
 - **Links**, all taken from recorded data: article cites source (frontmatter), article links to article (`[[wikilinks]]`), ECB edition superseded by (`superseded_by`), same EBA reference on a later item (`later_same_reference`, a hint only), act to its upcoming consolidation (`next_celex`).
 - **Views**: documents cited by the wiki (default), plus titles matching a credit-risk word list, or all documents (`…_source-map.html#all`). Filter by legal force, search titles, references and paths, and click any node for its details, file path and links.

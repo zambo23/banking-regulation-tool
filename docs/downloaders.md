@@ -34,6 +34,7 @@ The EBA site links some files that no longer exist, mostly old documents. The EB
 
 ## EBA publications (`download_eba_publications.py`)
 
+- Types read: guidelines (250), draft RTS (248), draft ITS (247), reports (257), consultation papers (244) and other publications (253). "Other publications" holds the EBA's and the Joint Committee's 2027 work programmes (earlier ones are among the reports), roadmaps, discussion papers, peer reviews and responses to the Commission; it was added when the 2027 work programme turned out to be missing from the reports.
 - To add a publication type, add an entry to `PUBLICATION_TYPES`: the listing's `document_type` id (250 Guidelines, 248 draft RTS, 247 draft ITS, 257 Reports, 244 Consultation papers, …; the ids come from the filter `<select>` on the page), the preferred reference kind, the register file and the download folder.
 - The listing is the EBA publications page filtered on `document_type`, paged with `&page=N`. Each `article.teaser` links directly to a file (PDF, sometimes xlsx/docx/zip). A few items (Risk Assessment Reports) link to an HTML publication page instead of a file. That page is saved as `.html`, and because it sends no ETag/Last-Modified, its `sha256` is a hash of the normalised `<main>` text, which is compared on every run. The date is in `.link-icon--calendar`; some teasers also carry a "Publication" tag in the same metadata block. EBA's type tagging is loose: some items appear in more than one listing, and the RTS listing contains a few GL/ITS documents.
 - EBA has no version metadata, so the register infers versions:
@@ -74,3 +75,10 @@ The EBA site links some files that no longer exist, mostly old documents. The EB
 - The guides page is rendered by JavaScript. The list itself is an HTML snippet named in the page's `data-snippets` attribute (`.../supervisoryguides_include.en.html`): `<dt isoDate>` + `<dd>` with `.title a` and an explicit English link `a[lang=en]`.
 - The list keeps old editions next to new ones. `guide_key` (lowercased title without a leading "ECB"/"SSM" and without "- consolidated version") groups them; the newest is `edition_status=current`, and older ones are `superseded` with `superseded_by` pointing to the next edition.
 - Change detection: the `?<hash>` on the title link is a cache key, not the file's MD5, and changes when the file is replaced. The server sends Last-Modified (unreliable: it reflects redeploys) and Content-Length, but no ETag. Any of these changing triggers a download; a new `_vN` version is recorded only if the SHA-256 differs.
+
+## ECB supervisory priorities (`download_ecb_priorities.py`)
+
+- The priorities page (`/framework/priorities/html/index.en.html`) loads its list from a `data-snippets` HTML snippet in the same `<dt isoDate>` + `<dd>` format as the guides page. Entries carry categories; the script keeps "Supervisory priorities" and "Risk assessment" (the annual risk assessments published next to the priorities until 2021).
+- Press releases and blog posts about an edition are listed too, and an edition itself can carry their category, so the title link decides: entries linking under `/press/` are skipped. Filtering by category alone missed the 2023-25 and 2024-26 editions.
+- Each edition has an explicit English PDF link (`a[lang=en]` ending in `.pdf`), which is downloaded. Within each kind the newest edition is `edition_status=current`; older ones are `superseded`, with `superseded_by` naming the next. Change detection is the guides' (link hash, Last-Modified, Content-Length, then SHA-256).
+- New editions usually appear in November or December, covering the next three years.
