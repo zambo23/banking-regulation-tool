@@ -8,7 +8,8 @@ With this tool you can:
 
 - get advice on a specific question (e.g. "How do I derive the observed downturn LGD?"), with every point cited to the text it rests on;
 - write a LinkedIn post for your clients on the latest regulatory news;
-- draft a validation plan for a credit risk model, with all the relevant references to take into account.
+- draft a validation plan for a credit risk model, with all the relevant references to take into account;
+- plan the bank's regulatory goals and activities from the regulators' published priorities and work programmes.
 
 ## How it works
 
@@ -85,7 +86,7 @@ What the agent does by default:
 - separates what it checked against a downloaded text from what it is recalling from its own knowledge, which it marks *To verify*;
 - asks before merging, deleting or reorganising anything in the wiki.
 
-Ready-made session prompts are in `docs/`: [a regulatory strategy consultant](docs/agent-prompt-strategy-regulation.md) for client questions and memos, [a credit risk model validator](docs/agent-prompt-model-validator.md) for validation plans and reports, and [a weekly LinkedIn post](docs/agent-prompt-linkedin-post.md) on the latest regulatory news.
+Ready-made session prompts are in `docs/`: [a regulatory strategy consultant](docs/agent-prompt-strategy-regulation.md) for client questions and memos, [a credit risk model validator](docs/agent-prompt-model-validator.md) for validation plans and reports, [a bank executive planning around regulators' priorities](docs/agent-prompt-regulators-priorities.md) for a yearly regulatory plan, and [a weekly LinkedIn post](docs/agent-prompt-linkedin-post.md) on the latest regulatory news.
 
 ## Repository layout
 
