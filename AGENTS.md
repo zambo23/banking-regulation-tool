@@ -128,11 +128,11 @@ sources:
 
 ### Update sources
 
-Run `python3 src/cli.py update` (see [docs/tooling.md](docs/tooling.md#commands)); it is safe to run daily. A new version of a document is saved as a new file and logged in the register's `history` sheet; nothing is overwritten. Then run `audit` to find articles that rely on outdated versions.
+Run `uv run src/cli.py update` (see [docs/tooling.md](docs/tooling.md#commands)); it is safe to run daily. A new version of a document is saved as a new file and logged in the register's `history` sheet; nothing is overwritten. Then run `audit` to find articles that rely on outdated versions.
 
 ### Regulatory watch
 
-To see what is new without downloading anything, run `python3 src/cli.py update --check`. Report the new or changed items that matter for credit risk (see [Scope](#scope-credit-risk-first)) with their legal force, then download and compile them only after the user confirms.
+To see what is new without downloading anything, run `uv run src/cli.py update --check`. Report the new or changed items that matter for credit risk (see [Scope](#scope-credit-risk-first)) with their legal force, then download and compile them only after the user confirms.
 
 ### `compile <scope>`
 
@@ -172,7 +172,7 @@ Outputs are not sources for the wiki unless an article explicitly cites them.
 
 ### Source map
 
-`python3 src/cli.py graph` writes an interactive map of the registers and the wiki to `data/03-output/<YYYY-MM-DD>_source-map.html` (see [docs/tooling.md](docs/tooling.md#source-map)). Every link in it comes from recorded data; use it to see coverage, superseded editions and uncompiled sources, not as a source itself.
+`uv run src/cli.py graph` writes an interactive map of the registers and the wiki to `data/03-output/<YYYY-MM-DD>_source-map.html` (see [docs/tooling.md](docs/tooling.md#source-map)). Every link in it comes from recorded data; use it to see coverage, superseded editions and uncompiled sources, not as a source itself.
 
 ### Knowledge graph (optional)
 
@@ -215,7 +215,7 @@ When a structural choice is ambiguous (new topic wiki, merge, reorganisation), a
 
 ## Source downloaders (`src/`)
 
-`src/cli.py` is the entry point for the downloaders; setup, dependencies and commands are in [docs/tooling.md](docs/tooling.md). In short: install with `uv`, not `pip`, and run `python3 src/cli.py <command>` from the repository root. Shared Excel code lives in `src/register.py`.
+`src/cli.py` is the entry point for the downloaders; setup, dependencies and commands are in [docs/tooling.md](docs/tooling.md). In short: manage dependencies with `uv` (`uv add`, never `pip`), and run `uv run src/cli.py <command>` from the repository root. Shared Excel code lives in `src/register.py`.
 
 Downloaded file names are listed in [docs/folder-structure.md](docs/folder-structure.md#sources-data00-source-and-data01-raw).
 

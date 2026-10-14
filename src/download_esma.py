@@ -17,8 +17,8 @@ without a main document are kept with status "no file", and translations (file n
 ..._bg_tra.pdf) with status "translation", without downloading them.
 
 Usage:
-    python3 src/download_esma.py           # check all items, download new or changed files
-    python3 src/download_esma.py --check   # only report what would change; download and write nothing
+    uv run src/download_esma.py           # check all items, download new or changed files
+    uv run src/download_esma.py --check   # only report what would change; download and write nothing
 """
 
 from __future__ import annotations

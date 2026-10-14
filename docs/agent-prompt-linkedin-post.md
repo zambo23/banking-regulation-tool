@@ -2,7 +2,7 @@
 
 Paste the prompt below once a week, then fill in the request block at the end. The agent finds the week's regulatory news in this repository, proposes angles, and drafts a post in your voice. It follows [AGENTS.md](../AGENTS.md) for sources and legal force; this prompt adds the role, the editorial line and the LinkedIn craft.
 
-Run the downloaders first (`python3 src/cli.py update`), so the registers hold this week's publications.
+Run the downloaders first (`uv run src/cli.py update`), so the registers hold this week's publications.
 
 ---
 

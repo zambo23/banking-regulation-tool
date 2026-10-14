@@ -5,16 +5,16 @@ How to set up the environment, run the download scripts, and which external tool
 ## Rules
 
 - Use `uv`, not `pip`.
-- Python 3.10+, run as `python3`. Dependencies are in `requirements.txt`; there is no `pyproject.toml` or lock file.
-- Run the CLI from the repo root: `python3 src/cli.py --help`.
-- Add a new dependency to `requirements.txt` and install it with `uv pip install -r requirements.txt` before relying on it.
+- Python 3.10+. Dependencies are declared in `pyproject.toml` and pinned in `uv.lock`; commit both.
+- Run every script through `uv run`, from the repo root: `uv run src/cli.py --help`. It uses the project environment (`.venv`), so there is nothing to activate.
+- Add a dependency with `uv add <package>`, remove one with `uv remove <package>`. Don't edit the dependency list by hand.
 
 ## Requirements
 
 | Tool | Used for | Required |
 |---|---|---|
-| Python 3.10+ (`python3`) | the download scripts in `src/` | yes |
-| [uv](https://docs.astral.sh/uv/) | creating the environment and installing dependencies. Use `uv`, not `pip` | yes |
+| Python 3.10+ | the download scripts in `src/`. uv installs it if the machine has none | yes |
+| [uv](https://docs.astral.sh/uv/) | managing the environment and dependencies, and running the scripts. Use `uv`, not `pip` | yes |
 | [poppler](https://poppler.freedesktop.org/) (`pdftotext`) | reading EBA references from page 1 of PDFs (scripts); reading PDFs during `compile` (agent) | optional for the scripts, needed by the agent |
 | graphify (`uv tool install graphifyy`) | turning the wiki into a knowledge graph | optional |
 
@@ -22,28 +22,26 @@ There is no build system, linter or test suite yet.
 
 ## Setup
 
-Dependencies (`requests`, `beautifulsoup4`, `openpyxl`) are listed in `requirements.txt`.
+Dependencies (`requests`, `beautifulsoup4`, `openpyxl`) are declared in `pyproject.toml`; `uv.lock` pins their exact versions. The project is an application, not a package (`[tool.uv] package = false`), so nothing is built or installed.
 
 ```bash
-uv venv
-source .venv/bin/activate
-uv pip install -r requirements.txt
+uv sync
 ```
 
-Use `python3`, not `python`: some machines have no `python` command outside a virtual environment.
+`uv sync` creates `.venv` and installs the locked versions. `uv run` does the same on first use, so this step is optional.
 
 ## Commands
 
-`src/cli.py` is the single entry point for the downloaders. `python3 src/cli.py --help` lists everything.
+`src/cli.py` is the single entry point for the downloaders. `uv run src/cli.py --help` lists everything.
 
 ```bash
-python3 src/cli.py update                 # run every downloader in parallel; safe to run daily
-python3 src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
-python3 src/cli.py ecb                    # ECB Banking Supervision supervisory guides
-python3 src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
-python3 src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
-python3 src/cli.py eba guidelines rts     # EBA publications listing, one or more of: guidelines, rts, its, reports, cp
-python3 src/cli.py graph                  # interactive source map, see below
+uv run src/cli.py update                 # run every downloader in parallel; safe to run daily
+uv run src/cli.py isrb                   # EBA Interactive Single Rulebook acts, current EUR-Lex consolidated texts
+uv run src/cli.py ecb                    # ECB Banking Supervision supervisory guides
+uv run src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
+uv run src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
+uv run src/cli.py eba guidelines rts     # EBA publications listing, one or more of: guidelines, rts, its, reports, cp
+uv run src/cli.py graph                  # interactive source map, see below
 ```
 
 | Option | Applies to | Effect |
@@ -58,7 +56,7 @@ python3 src/cli.py graph                  # interactive source map, see below
 - Progress is shown live. Every line is prefixed with the time and the job name (`16:08:23 [esma] ... 50/775 items checked`). Each job logs when it starts and when it finishes, with its duration. Every minute a `[cli] still running: …` line lists the jobs not yet done and how long each has run. The long loops print a progress line every 50 items (every 5 pages while reading a listing), and ESMA logs its rate-limit waits.
 - The same lines are saved to `data/logs/<YYYY-MM-DD_HHMMSS>_<command>.log`, e.g. to see afterwards which job was slow or failed.
 - In parallel mode, each script writes its own register, so jobs don't conflict. The run ends with a per-job summary with durations, and the exit code is non-zero if any job failed. An EBA job exits 1 on any download error, e.g. a dead link on the EBA site.
-- The CLI runs the scripts in `src/` as subprocesses with the same interpreter, from the repository root. Each script still runs on its own, e.g. `python3 src/download_eba_publications.py rts --check`. They must be run as `python3 src/<script>.py`: they import the shared Excel code as `from register import ...`, which only resolves that way.
+- The CLI runs the scripts in `src/` as subprocesses with the same interpreter (the project environment, under `uv run`), from the repository root. Each script still runs on its own, e.g. `uv run src/download_eba_publications.py rts --check`. They must be run as `uv run src/<script>.py`: they import the shared Excel code as `from register import ...`, which only resolves that way.
 
 ## Reading PDFs
 
@@ -68,7 +66,7 @@ pdftotext -layout <file> -
 
 ## Source map
 
-`python3 src/cli.py graph` writes `data/03-output/<YYYY-MM-DD>_source-map.html`, a self-contained page (open it in any browser, no network needed) that maps the document collection:
+`uv run src/cli.py graph` writes `data/03-output/<YYYY-MM-DD>_source-map.html`, a self-contained page (open it in any browser, no network needed) that maps the document collection:
 
 - **Outer ring**: every document in the registers, one sector per source in order of legal force (EUR-Lex acts, EBA RTS and ITS, EBA guidelines, ESMA, ECB guides, Basel Framework, EBA reports, EBA consultations). Each Basel chapter version is a separate node. ESMA documents are coloured by their listed type. Documents cited by the wiki sit nearest the centre.
 - **Inner ring**: the topic wikis and their articles.
