@@ -4,7 +4,7 @@ This file provides guidance to AI agents working in this repository.
 
 ## What this project is
 
-A "second brain" for **EU banking regulation, focused on credit risk**. 
+A "second brain" for **EU banking regulation and the Basel Framework, focused on credit risk**. 
 It follows the LLM Wiki pattern popularised by Andrej Karpathy. 
 Instead of re-reading raw documents for every question, an LLM compiles them once into a persistent, 
 interlinked Markdown wiki and keeps it up to date as sources change.
@@ -35,7 +35,7 @@ Read [docs/folder-structure.md](docs/folder-structure.md) for what lives where, 
 
 ## Scope: credit risk first
 
-The corpus covers much more than credit risk: about 2,200 documents, including AML, payments, MiCA, DORA and securities-markets rules from ESMA. Compile selectively.
+The corpus covers much more than credit risk: about 2,500 documents, including AML, payments, MiCA, DORA, securities-markets rules from ESMA and the whole Basel Framework. Compile selectively.
 
 - **Core**: the default definition, the standardised approach and IRB (PD, LGD, EAD/CCF, model governance and validation, internal models), credit risk mitigation, NPE and forbearance, provisioning (the IFRS 9 interplay and the prudential backstop), loan origination and monitoring, large exposures and concentration, counterparty credit risk, securitisation, credit-risk reporting and disclosure.
 - **Context**: own funds, Pillar 2/SREP/ICAAP, internal governance, stress testing. Cover these only as far as they bear on credit risk.

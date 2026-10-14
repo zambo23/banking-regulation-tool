@@ -1,21 +1,23 @@
 # banking-regulation-tool
 
-A "second brain" for **EU banking regulation, focus of Basel Framework**.
+A "second brain" for **EU banking regulation and the Basel Framework, focused on credit risk**.
 
-Banking is highly regulated industry. The body of knowledge is huge, frequently updated, and not always easy to interpret correctly. Consulting companies have made a business out of it, for years hcarging banks and financial services for how to and implementation plan to be implemented. This tool is the answer to all of it - easy, fast, affordable. 
+Banking is a highly regulated industry. The body of rules is huge, changes often, and is not always easy to interpret correctly. Consulting firms have built a business on it, charging banks and other financial institutions for interpretations and implementation plans. This tool does much of that work from the official texts: quickly, at low cost, and with every point traceable to its source.
 
 With this tool you can:
-- get a free consultation or advice of specific argument (i.e. "How to derived the observed downtunr LGD")
-- write a LinkedIn Post for your clients
-- make a validation plan with all the relevant references to be take into account
+
+- get advice on a specific question (e.g. "How do I derive the observed downturn LGD?"), with every point cited to the text it rests on;
+- write a LinkedIn post for your clients on the latest regulatory news;
+- draft a validation plan for a credit risk model, with all the relevant references to take into account.
 
 ## How it works
+
 Python scripts download the official texts from EUR-Lex, the EBA, ECB Banking Supervision, ESMA and the Basel Committee (BIS), and track every version in Excel registers. An AI coding agent (Claude Code, Codex, …) then compiles those texts into an interlinked Markdown wiki. Every claim is cited to the article or paragraph, its legal force is stated, and it points to the exact file version it relies on. When a source changes, the wiki shows which articles have gone stale.
 
 It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the documents once into a maintained knowledge base, instead of re-reading raw PDFs for every question.
 
 ```text
- EUR-Lex · EBA · ECB · ESMA   data/00-source            data/02-wiki               data/03-output
+ EUR-Lex·EBA·ECB·ESMA·BIS     data/00-source            data/02-wiki               data/03-output
  ─────────────────── ──►  registers (.xlsx)    ──►  interlinked Markdown   ──►  memos, comparisons,
    src/ downloaders       data/01-raw (texts)       wiki, written by the        reports
                           versioned, immutable      agent per AGENTS.md
@@ -31,7 +33,7 @@ It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the do
 | ESMA library | `cli.py esma` (`download_esma.py`) | the "Guidelines and Technical standards" section: guidelines, final reports, compliance tables |
 | Basel Framework (BIS) | `cli.py basel` (`download_basel.py`) | the BCBS standards, chapter by chapter: current and forthcoming versions, with past versions listed in the register |
 
-The corpus is about 2,200 documents. The wiki deliberately covers **credit risk** first:
+The corpus is about 2,500 documents. The wiki deliberately covers **credit risk** first:
 
 - **core:** the definition of default, the standardised approach, IRB, credit risk mitigation, NPE, provisioning, loan origination, large exposures, counterparty credit risk and securitisation;
 - **context:** own funds, Pillar 2, governance and stress testing, as far as they bear on credit risk.
