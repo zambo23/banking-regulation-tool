@@ -81,6 +81,8 @@ MAX_PAGES = 200  # safety stop for the pager loop
 
 USER_AGENT = "banking-regulation-tool/0.1 (EBA publications downloader)"
 REQUEST_PAUSE_S = 0.5
+PROGRESS_PAGES = 5  # print a progress line every N listing pages
+PROGRESS_ITEMS = 50  # and every N items checked
 
 DATE = re.compile(r"\b\d{1,2} [A-Z][a-z]+ \d{4}\b")
 # Separators exclude line breaks: "EBA/Rep/2022" followed by a date line "08 April 2022" is not EBA/REP/2022/08.
@@ -127,6 +129,8 @@ def scrape_listing(session: requests.Session, ptype: PublicationType) -> list[It
         teasers = BeautifulSoup(resp.text, "html.parser").select("article.teaser")
         if not teasers:
             break
+        if page and page % PROGRESS_PAGES == 0:
+            print(f"  ... listing page {page}, {len(items)} items so far")
         for teaser in teasers:
             link = teaser.select_one(".teaser__title a[href]")
             when = teaser.select_one(".link-icon--calendar") or teaser.select_one(".teaser__metadata")
@@ -260,7 +264,9 @@ def main() -> int:
     taken = {r["doc_id"] for r in previous}
     documents, statuses, failures = [], Counter(), 0
 
-    for item, prev in zip(items, matched):
+    for i, (item, prev) in enumerate(zip(items, matched)):
+        if i and i % PROGRESS_ITEMS == 0:
+            print(f"  ... {i}/{len(items)} items checked")
         row = dict(prev) if prev else {"doc_id": new_doc_id(item, taken), "version": 0, "first_seen_at": now}
         taken.add(row["doc_id"])
         documents.append(row)

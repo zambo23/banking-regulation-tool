@@ -59,6 +59,7 @@ DOWNLOADED_STATUSES = ("Current", "Forthcoming")
 
 USER_AGENT = "banking-regulation-tool/0.1 (Basel Framework downloader)"
 REQUEST_PAUSE_S = 0.5
+PROGRESS_ITEMS = 50  # print a progress line every N chapters or versions
 
 DOCUMENT_COLUMNS = [
     "doc_id", "chapter", "standard", "standard_title", "chapter_title", "description",
@@ -144,7 +145,9 @@ def scrape_timeline(session: requests.Session) -> tuple[list[Version], dict[str,
     links = [urljoin(FRAMEWORK_URL, a["href"]) for a in BeautifulSoup(home.text, "html.parser").select("a[href*='/inforce/']")]
     chapters = sorted({m.group(1, 2) for m in map(VERSION_PATH.search, [*versions, *links]) if m})
     print(f"  {len(chapters)} chapters on the timeline and the framework page; reading each chapter's versions")
-    for standard, number in chapters:
+    for i, (standard, number) in enumerate(chapters):
+        if i and i % PROGRESS_ITEMS == 0:
+            print(f"  ... {i}/{len(chapters)} chapter timelines read")
         read_timeline(session, {"standard": standard.upper(), "chapter": number}, versions, standards)
     return list(versions.values()), standards
 
@@ -200,7 +203,9 @@ def main() -> int:
     current = current_versions(versions)
     documents, statuses, failures, seen = [], Counter(), 0, set()
 
-    for version in sorted(versions, key=lambda v: v.doc_id):
+    for i, version in enumerate(sorted(versions, key=lambda v: v.doc_id)):
+        if i and i % PROGRESS_ITEMS == 0:
+            print(f"  ... {i}/{len(versions)} versions checked")
         if version.doc_id in seen:
             continue
         seen.add(version.doc_id)

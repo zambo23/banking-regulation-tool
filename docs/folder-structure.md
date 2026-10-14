@@ -11,7 +11,8 @@ banking-regulation-tool/
 │   ├── 00-source/           one Excel register per source
 │   ├── 01-raw/              downloaded texts, every version kept
 │   ├── 02-wiki/             the knowledge base
-│   └── 03-output/           disposable query results
+│   ├── 03-output/           disposable query results
+│   └── logs/                one log file per downloader run
 ├── docs/                    guides and agent prompts
 ├── AGENTS.md                rules for agents
 ├── CLAUDE.md                points Claude Code to AGENTS.md
@@ -25,6 +26,7 @@ banking-regulation-tool/
 | `data/00-source/*.xlsx` | one register per source: a `documents` sheet (current state) and a `history` sheet (every downloaded version) | scripts only |
 | `data/01-raw/` | downloaded English texts (PDF, HTML, xlsx, …); old versions are kept next to new ones | scripts only |
 | `data/02-wiki/` | the knowledge base | agent |
+| `data/logs/` | one log per `cli.py` downloader run, `<YYYY-MM-DD_HHMMSS>_<command>.log`; safe to delete | `cli.py` |
 | `data/03-output/` | disposable query results: memos, comparisons, reports, slide decks | agent |
 | `docs/` | guides (`folder-structure.md`, `tooling.md`) and agent prompts (`agent-prompt-*.md`) | — |
 

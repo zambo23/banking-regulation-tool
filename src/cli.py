@@ -20,39 +20,108 @@ EBA types: guidelines, rts, its, reports (~470 items), cp (~490 items). Reports 
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from pathlib import Path
 
 from download_eba_publications import PUBLICATION_TYPES
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
+LOG_DIR = ROOT / "data" / "logs"
+HEARTBEAT_S = 60  # how often to list the jobs still running
 
 
 def job(name: str, script: str, *args: str) -> tuple[str, list[str]]:
     return name, [sys.executable, str(SRC / script), *args]
 
 
-def run(jobs: list[tuple[str, list[str]]], parallel: bool) -> int:
-    """Run the jobs, print each one's output as a block, and return the worst exit code."""
-    if not parallel or len(jobs) == 1:
-        codes = [subprocess.run(cmd, cwd=ROOT).returncode for _, cmd in jobs]
-    else:
-        # each script writes its own register, so they can run side by side
-        with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
-            results = list(pool.map(lambda j: subprocess.run(j[1], cwd=ROOT, capture_output=True, text=True), jobs))
-        for (name, _), result in zip(jobs, results):
-            print(f"=== {name}")
-            print(result.stdout, end="")
-            print(result.stderr, end="", file=sys.stderr)
-        codes = [r.returncode for r in results]
+def duration(seconds: float) -> str:
+    minutes, seconds = divmod(int(seconds), 60)
+    return f"{minutes}m{seconds:02d}s" if minutes else f"{seconds}s"
+
+
+class Log:
+    """Print timestamped lines tagged with the job name, and copy them to a log file."""
+
+    def __init__(self, path: Path, width: int):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self.path, self.width = path, width
+        self.file = path.open("a", encoding="utf-8")
+        self.lock = threading.Lock()
+
+    def __call__(self, name: str, text: str) -> None:
+        line = f"{datetime.now():%H:%M:%S} [{name:<{self.width}}] {text}"
+        with self.lock:
+            print(line, flush=True)
+            self.file.write(line + "\n")
+            self.file.flush()
+
+
+def run(jobs: list[tuple[str, list[str]]], parallel: bool, command: str) -> int:
+    """Run the jobs, streaming their output line by line, and return the worst exit code.
+
+    Every line is prefixed with the time and the job name, and copied to data/logs/. Each job's
+    start and end are logged, and while jobs run a heartbeat lists them with their elapsed time.
+    """
+    log = Log(LOG_DIR / f"{datetime.now():%Y-%m-%d_%H%M%S}_{command}.log", max(len(n) for n, _ in jobs + [("cli", [])]))
+    log("cli", f"{len(jobs)} job(s), {'parallel' if parallel and len(jobs) > 1 else 'one at a time'}; log: {log.path.relative_to(ROOT)}")
+    env = {**os.environ, "PYTHONUNBUFFERED": "1"}  # scripts print as they go, not when their buffer fills
+    running: dict[str, float] = {}
+    results: dict[str, tuple[int, float]] = {}
+    processes: list[subprocess.Popen] = []
+    done = threading.Event()
+
+    def execute(name: str, cmd: list[str]) -> None:
+        started = time.monotonic()
+        running[name] = started
+        log(name, "started")
+        proc = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, bufsize=1)
+        processes.append(proc)
+        for line in proc.stdout:
+            log(name, line.rstrip())
+        code = proc.wait()
+        running.pop(name, None)
+        results[name] = (code, time.monotonic() - started)
+        log(name, f"finished in {duration(results[name][1])}: {'ok' if code == 0 else f'exit {code}'}")
+
+    def heartbeat() -> None:
+        while not done.wait(HEARTBEAT_S):
+            now = time.monotonic()
+            busy = ", ".join(f"{n} ({duration(now - t)})" for n, t in list(running.items()))
+            if busy:
+                log("cli", f"still running: {busy}; {len(results)}/{len(jobs)} done")
+
+    begun = time.monotonic()
+    threading.Thread(target=heartbeat, daemon=True).start()
+    # each script writes its own register, so they can run side by side
+    with ThreadPoolExecutor(max_workers=len(jobs) if parallel else 1) as pool:
+        futures = [pool.submit(execute, name, cmd) for name, cmd in jobs]
+        try:
+            for future in futures:
+                future.result()
+        except KeyboardInterrupt:
+            for future in futures:
+                future.cancel()  # jobs not started yet
+            for proc in processes:
+                proc.terminate()
+            log("cli", "interrupted; running jobs stopped")
+    done.set()
+    if len(results) < len(jobs):
+        return 130
+
     if len(jobs) > 1:
-        print("\nSummary:")
-        for (name, _), code in zip(jobs, codes):
-            print(f"  {name:<16} {'ok' if code == 0 else f'exit {code}'}")
-    return max(codes)
+        log("cli", f"all jobs finished in {duration(time.monotonic() - begun)}")
+        for name, _ in jobs:
+            code, took = results[name]
+            log("cli", f"  {name:<16} {'ok' if code == 0 else f'exit {code}':<8} {duration(took)}")
+    return max(code for code, _ in results.values())
 
 
 def main() -> int:
@@ -79,7 +148,8 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.command == "graph":
-        return run([job("graph", "source_map.py", *(["--output", args.output] if args.output else []))], parallel=False)
+        cmd = job("graph", "source_map.py", *(["--output", args.output] if args.output else []))[1]
+        return subprocess.run(cmd, cwd=ROOT).returncode
 
     flags = ["--check"] if args.check else []
     if args.command == "isrb":
@@ -97,7 +167,7 @@ def main() -> int:
         jobs = [job("isrb", "download_isrb.py", *flags), job("ecb", "download_ecb_guides.py", *flags),
                 job("esma", "download_esma.py", *flags), job("basel", "download_basel.py", *flags)]
         jobs += [job(f"eba {t}", "download_eba_publications.py", t, *flags) for t in PUBLICATION_TYPES]
-    return run(jobs, parallel=not getattr(args, "sequential", False))
+    return run(jobs, parallel=not getattr(args, "sequential", False), command=args.command)
 
 
 if __name__ == "__main__":

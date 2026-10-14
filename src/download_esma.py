@@ -50,6 +50,8 @@ MAX_PAGES = 100  # safety stop for the pager loop
 
 USER_AGENT = "banking-regulation-tool/0.1 (ESMA library downloader)"
 REQUEST_PAUSE_S = 0.5
+PROGRESS_PAGES = 5  # print a progress line every N listing pages
+PROGRESS_ITEMS = 50  # and every N items checked
 
 DOCUMENT_COLUMNS = [
     "doc_id", "publication_date", "title", "esma_reference", "doc_type", "sections", "file_type",
@@ -106,6 +108,8 @@ def scrape_listing(session: requests.Session) -> list[Item]:
         rows = [r for r in table.select(":scope > tbody > tr") if cell(r, "title")] if table else []
         if not rows:
             break
+        if page and page % PROGRESS_PAGES == 0:
+            print(f"  ... listing page {page}, {len(items)} items so far")
         for row in rows:
             link = cell(row, "title").find("a", href=True)
             main = cell(row, "field-main-document").find("a", href=True)
@@ -135,7 +139,9 @@ def request(session: requests.Session, method: str, url: str, timeout: int) -> r
         if resp.status_code != 429 or attempt == RETRIES:
             break
         wait = resp.headers.get("Retry-After", "")
-        time.sleep(int(wait) if wait.isdigit() else 30 * (attempt + 1))
+        seconds = int(wait) if wait.isdigit() else 30 * (attempt + 1)
+        print(f"  ... rate limited by ESMA (HTTP 429), waiting {seconds}s before retry {attempt + 1}/{RETRIES}")
+        time.sleep(seconds)
     resp.raise_for_status()
     return resp
 
@@ -179,7 +185,9 @@ def main() -> int:
     history = read_sheet(REGISTER_PATH, "history")
     documents, statuses, failures, seen = [], Counter(), 0, set()
 
-    for item in items:
+    for i, item in enumerate(items):
+        if i and i % PROGRESS_ITEMS == 0:
+            print(f"  ... {i}/{len(items)} items checked")
         if item.doc_id in seen:  # the same document listed twice
             continue
         seen.add(item.doc_id)

@@ -49,13 +49,15 @@ python3 src/cli.py graph                  # interactive source map, see below
 | Option | Applies to | Effect |
 |---|---|---|
 | `--check` | all | report what is outdated; download and write nothing |
-| `--sequential` | `update`, `eba` | run one downloader at a time, streaming output (default: parallel, output printed per job when done) |
+| `--sequential` | `update`, `eba` | run one downloader at a time (default: in parallel) |
 | `--rescan-references` | `eba` | re-read `eba_reference` for every downloaded file (run after changing `EBA_REF`) |
 
 - Re-running is how documents get updated. A new version is saved as a new file, never over the old one.
 - `basel` reads about 130 timeline pages (one per chapter) on every run, about two minutes; it downloads only versions it has not saved yet.
 - The EBA `reports` (~470 items) and `cp` (~490 items) listings take several minutes.
-- In parallel mode, each script writes its own register, so jobs don't conflict. The run ends with a per-job summary, and the exit code is non-zero if any job failed. An EBA job exits 1 on any download error, e.g. a dead link on the EBA site.
+- Progress is shown live. Every line is prefixed with the time and the job name (`16:08:23 [esma] ... 50/775 items checked`). Each job logs when it starts and when it finishes, with its duration. Every minute a `[cli] still running: …` line lists the jobs not yet done and how long each has run. The long loops print a progress line every 50 items (every 5 pages while reading a listing), and ESMA logs its rate-limit waits.
+- The same lines are saved to `data/logs/<YYYY-MM-DD_HHMMSS>_<command>.log`, e.g. to see afterwards which job was slow or failed.
+- In parallel mode, each script writes its own register, so jobs don't conflict. The run ends with a per-job summary with durations, and the exit code is non-zero if any job failed. An EBA job exits 1 on any download error, e.g. a dead link on the EBA site.
 - The CLI runs the scripts in `src/` as subprocesses with the same interpreter, from the repository root. Each script still runs on its own, e.g. `python3 src/download_eba_publications.py rts --check`. They must be run as `python3 src/<script>.py`: they import the shared Excel code as `from register import ...`, which only resolves that way.
 
 ## Reading PDFs
