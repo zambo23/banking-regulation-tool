@@ -7,6 +7,7 @@ wikis. Edges come only from recorded facts:
 - an ECB guide edition is superseded by a newer one (`superseded_by`);
 - an EBA item shares its reference with a later item (`later_same_reference`, only a hint);
 - an act has a published, future-dated consolidation (`next_celex`).
+EBA Single Rulebook documents are coloured by their product type (guidelines, technical standards, other).
 Basel Framework chapters are listed one node per chapter version, with BIS's status
 (Current, Forthcoming, Superseded, Removed on <date>).
 "Credit-risk keyword" is a title match on a fixed word list, a filter aid, not a classification.
@@ -123,6 +124,18 @@ def read_registers(nodes: dict, edges: list, by_file: dict) -> None:
                      label=r.get("esma_reference") or r["title"][:40], title=r["title"],
                      date=r.get("publication_date") or "", ref=r.get("esma_reference") or "",
                      status=r.get("status") or "", path=r.get("local_file") or "", url=r.get("url") or "")
+
+    for r in read_sheet(SOURCE_DIR / "eba_single_rulebook.xlsx", "documents"):
+        product = r.get("product") or ""
+        force = ("rts-its" if re.search(r"technical standards", product, re.I)
+                 else "guideline" if re.search(r"guidelines|recommendation", product, re.I) else "report")
+        add_document(nodes, by_file, f"ebasr:{r['doc_id']}", files_of(r.get("local_file")),
+                     group="EBA Single Rulebook", force=force,
+                     label=r.get("eba_reference") or (r.get("title") or "")[:40],
+                     title=f"{product}: {r.get('title') or ''}", date=r.get("application_date") or r.get("last_update") or "",
+                     ref=r.get("eba_reference") or "",
+                     status=" · ".join(x for x in (r.get("product_version"), r.get("phase"), r.get("phase_status"), r.get("status")) if x),
+                     path=r.get("local_file") or "", url=r.get("url") or "")
 
     for r in read_sheet(SOURCE_DIR / "bis_basel_framework.xlsx", "documents"):
         add_document(nodes, by_file, f"basel:{r['doc_id']}", files_of(r.get("local_file")),

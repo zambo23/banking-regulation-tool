@@ -5,9 +5,8 @@ How to set up the environment, run the download scripts, and which external tool
 ## Rules
 
 - Use `uv`, not `pip`.
-- Python 3.10+, run as `python3`. Dependencies are in `requirements.txt`; there is no `pyproject.toml` or lock file.
+- Python 3.10+, run as `python3`.
 - Run the CLI from the repo root: `python3 src/cli.py --help`.
-- Add a new dependency to `requirements.txt` and install it with `uv pip install -r requirements.txt` before relying on it.
 
 ## Requirements
 
@@ -42,6 +41,7 @@ python3 src/cli.py isrb                   # EBA Interactive Single Rulebook acts
 python3 src/cli.py ecb                    # ECB Banking Supervision supervisory guides
 python3 src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
 python3 src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
+python3 src/cli.py eba-sr                 # EBA Single Rulebook product pages: final texts with status and dates
 python3 src/cli.py eba guidelines rts     # EBA publications listing, one or more of: guidelines, rts, its, reports, cp
 python3 src/cli.py graph                  # interactive source map, see below
 ```
@@ -53,6 +53,7 @@ python3 src/cli.py graph                  # interactive source map, see below
 | `--rescan-references` | `eba` | re-read `eba_reference` for every downloaded file (run after changing `EBA_REF`) |
 
 - Re-running is how documents get updated. A new version is saved as a new file, never over the old one.
+- `eba-sr` reads about 420 product pages and their phases on every run (10–20 minutes); the first run also downloads about 1,500 files.
 - `basel` reads about 130 timeline pages (one per chapter) on every run, about two minutes; it downloads only versions it has not saved yet.
 - The EBA `reports` (~470 items) and `cp` (~490 items) listings take several minutes.
 - Progress is shown live. Every line is prefixed with the time and the job name (`16:08:23 [esma] ... 50/775 items checked`). Each job logs when it starts and when it finishes, with its duration. Every minute a `[cli] still running: …` line lists the jobs not yet done and how long each has run. The long loops print a progress line every 50 items (every 5 pages while reading a listing), and ESMA logs its rate-limit waits.

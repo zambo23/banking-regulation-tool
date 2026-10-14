@@ -129,7 +129,7 @@ for (const n of nodes) {
 }
 const topicOf = n => n.kind === "topic" ? n.id.slice(6) : n.kind === "article" ? n.ref.split("/")[0] : null;
 // sectors of the outer ring, in order of legal force
-const ORDER = ["EUR-Lex acts", "EBA RTS", "EBA ITS", "EBA guidelines", "ESMA", "ECB guides", "Basel Framework", "EBA reports", "EBA consultations"];
+const ORDER = ["EUR-Lex acts", "EBA RTS", "EBA ITS", "EBA guidelines", "EBA Single Rulebook", "ESMA", "ECB guides", "Basel Framework", "EBA reports", "EBA consultations"];
 const SECTORS = ORDER.filter(g => groups.includes(g)).concat(groups.filter(g => g !== "Wiki" && !ORDER.includes(g)));
 
 // ---------- filters ----------

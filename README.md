@@ -29,6 +29,7 @@ It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the do
 | --- | --- | --- |
 | EUR-Lex, via the EBA Interactive Single Rulebook act list | `cli.py isrb` (`download_isrb.py`) | CRR, CRD, BRRD, DORA, … the current consolidated text (or the original act if never amended) |
 | EBA publications | `cli.py eba <type>` (`download_eba_publications.py`) | `guidelines`, `rts`, `its`, `reports`, `cp` (consultation papers) |
+| EBA Single Rulebook pages | `cli.py eba-sr` (`download_eba_single_rulebook.py`) | the final texts of every regulatory product (guidelines, RTS, ITS, …) with their status, application date and compliance deadline, including older guidelines missing from the publications listing |
 | ECB Banking Supervision | `cli.py ecb` (`download_ecb_guides.py`) | supervisory guides, with superseded editions tracked |
 | ESMA library | `cli.py esma` (`download_esma.py`) | the "Guidelines and Technical standards" section: guidelines, final reports, compliance tables |
 | Basel Framework (BIS) | `cli.py basel` (`download_basel.py`) | the BCBS standards, chapter by chapter: current and forthcoming versions, with past versions listed in the register |
@@ -57,6 +58,7 @@ python3 src/cli.py eba guidelines rts     # EBA publications: guidelines, rts, i
 python3 src/cli.py ecb                    # ECB supervisory guides
 python3 src/cli.py esma                   # ESMA guidelines and technical standards
 python3 src/cli.py basel                  # Basel Framework chapters (BCBS standards)
+python3 src/cli.py eba-sr                 # EBA Single Rulebook product pages
 python3 src/cli.py graph                  # interactive map of the documents and the wiki
 ```
 

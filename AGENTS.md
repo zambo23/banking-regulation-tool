@@ -5,7 +5,7 @@ This file provides guidance to AI agents working in this repository.
 ## What this project is
 
 A "second brain" for **EU banking regulation and the Basel Framework, focused on credit risk**. 
-It follows the LLM Wiki pattern popularised by Andrej Karpathy. 
+It follows the LLM Wiki pattern popularised by Andrej Karpathy.
 Instead of re-reading raw documents for every question, an LLM compiles them once into a persistent, 
 interlinked Markdown wiki and keeps it up to date as sources change.
 
@@ -51,6 +51,7 @@ Every claim must make its legal force clear. From most to least binding:
 | 1 | CRR, CRD, BRRD, … (`eurlex/`) | law |
 | 2 | delegated and implementing regulations adopting RTS/ITS | law. The EBA files in `eba-rts/` and `eba-its/` are the EBA's **final drafts**; the adopted text is the regulation published in EUR-Lex |
 | 3 | EBA guidelines (`eba-guidelines/`) | comply-or-explain |
+| by type | EBA Single Rulebook product pages (`eba-single-rulebook/`) | the force of the document: guidelines comply-or-explain, final draft RTS/ITS as above, reports and opinions not binding. The register adds the EBA's own `phase_status` (e.g. "Applicable", "In force"), application date and compliance deadline; prefer it over `eba-guidelines/` for a guideline's status and dates |
 | — | ECB supervisory guides (`ecb-guides/`) | ECB supervisory expectations for significant institutions; not law |
 | — | EBA reports (`eba-reports/`) | analysis and benchmarking; not binding |
 | — | EBA consultation papers (`eba-consultation-papers/`) | **proposals only**; never present them as rules in force |
@@ -188,6 +189,7 @@ A health check of the wiki. Report:
   - an ECB guide with `edition_status=superseded`;
   - an EBA item with `later_same_reference`, or with `status=not listed`;
   - an ESMA item with `status=not listed`;
+  - an EBA Single Rulebook document with `is_current_version` false (a previous version: check whether the current version amends or replaces it; an amended guideline often stays in force), or with `status=not listed`;
   - a Basel chapter version with `bis_status` Superseded or "Removed on …", or `status=not listed`, or Current but not its chapter's `current_doc_id`. A Forthcoming version is not stale; note when it has become Current.
 - **Uncompiled changes**: sources in scope whose SHA-256 isn't in `log.md`.
 - **Duplicates**: overlapping articles that are candidates for a merge.
@@ -244,12 +246,21 @@ Downloaded file names are listed in [docs/folder-structure.md](docs/folder-struc
   - Some covers cite another document ("Report complementing EBA/REP/2021/18").
 - The reference regex separators deliberately exclude newlines. Otherwise a cover line "EBA/Rep/2022" followed by "08 April 2022" would read as EBA/REP/2022/08.
 
+### EBA Single Rulebook (`download_eba_single_rulebook.py`)
+
+- The EBA publications listing misses the final versions of many older guidelines (e.g. EBA/GL/2017/16, EBA/GL/2019/03, EBA/GL/2017/06). Their final texts are on the Single Rulebook product pages, one page per regulatory product.
+- Listing: there is no sitemap, and a topic page (`/regulation-and-policy/<topic>`) shows only some of its products in the body. The breadcrumb menu (`nav.breadcrumb-sw`, last `li.breadcrumb-sw__item`, its `.breadcrumb-sw__item-children` links) lists all of them. Topics come from the same menu. Product URLs vary: most are `/activities/single-rulebook/regulatory-activities/<topic>/<slug>`, some are at the site root or under `/legacy/`, so take them from the menu, never from a URL pattern.
+- A product has versions (current URL; "Previous versions" `?version=<year>` and "Ongoing versions" in `.activity-versions__buttons` dropdowns) and phases (`.timeline__item`: Consultation, Final Report, Consolidated Document, each `?phase=<name>`; the version URL shows its latest phase). A phase page has a status box (`.box-data__items`: Status, Application date, Compliance deadline) and `.document-download` cards: the English file in `.card-body`, translations in a collapsed list, not downloaded. An amending act becomes the current version while the original stays a previous version, often still in force (definition of default: current 2026 amending report; EBA/GL/2016/07 under `?version=2016`).
+- Consultation phases are skipped; a product only under consultation yields nothing. Products migrated from the old site keep their final texts in the description's "Documents" box (`.well a`), e.g. the downturn LGD guidelines; those links are read too (phase `Documents (product page)`), skipping translation links labelled `bg български`, `en English`, … Old-style links (`/documents/10180/<n>/<name>.pdf/<uuid>`) redirect to the file and end in a UUID, so the file name is taken from the segment with an extension.
+- `doc_id` is a hash of product URL, phase title and card title. A new file version is recorded when the card's URL or "Last update" date changes and the bytes differ; no HEAD requests are needed.
+
 ### ESMA library (`download_esma.py`)
 
 - The source is the ESMA library table filtered on section 35, "Guidelines and Technical standards" (`?f[0]=basic_section:35`). Each top-level `tbody` row has `td.views-field-*` cells: `created` (dd/mm/yyyy), `field-document-reference` (the ESMA reference), `title` (link to the document page), `field-document-section`, `field-document-type` and `field-main-document` (the file link). The `Info` cell holds nested tables of related documents and translations; only top-level rows are listings.
 - Paging: `items_per_page=50` with `&page=N`. `items_per_page=100` works for page 0 only; later pages return HTTP 500.
 - `doc_id` is a hash of the document page URL (`/document/<slug>`), which is steadier than the file URL. A new file URL with different bytes is a new version.
 - Change detection uses ETag and Last-Modified only: ESMA answers HEAD requests with `Content-Length: 0`.
+- The listing also carries translations of older guidelines as separate rows (about 470 of 775). They are kept with status `translation` and not checked: their file names end or start with a language code in many forms (`_bg_tra`, `_de_cor2`, `2011-188pt`, `-enbg_0`, the non-ISO `cz`/`ee`, `bg_-_jc_…`), and ESMA sometimes gives them the English title. A title with non-ASCII letters catches the rest. Checking them all used to trigger HTTP 429 rate limiting.
 
 ### Basel Framework (`download_basel.py`)
 
@@ -260,7 +271,6 @@ Downloaded file names are listed in [docs/folder-structure.md](docs/folder-struc
 - Don't use the chapter PDFs (`.../basel-framework/<node>/chapter.pdf`): they are rendered on request, and the same link sometimes returns a different version of the chapter. The script checks the page's "Effective as of" date against the URL.
 
 ### ECB supervisory guides (`download_ecb_guides.py`)
-- The listing also carries translations of older guidelines as separate rows (about 470 of 775). They are kept with status `translation` and not checked: their file names end or start with a language code in many forms (`_bg_tra`, `_de_cor2`, `2011-188pt`, `-enbg_0`, the non-ISO `cz`/`ee`, `bg_-_jc_…`), and ESMA sometimes gives them the English title. A title with non-ASCII letters catches the rest. Checking them all used to trigger HTTP 429 rate limiting.
 
 - The guides page is rendered by JavaScript. The list itself is an HTML snippet named in the page's `data-snippets` attribute (`.../supervisoryguides_include.en.html`): `<dt isoDate>` + `<dd>` with `.title a` and an explicit English link `a[lang=en]`.
 - The list keeps old editions next to new ones. `guide_key` (lowercased title without a leading "ECB"/"SSM" and without "- consolidated version") groups them; the newest is `edition_status=current`, and older ones are `superseded` with `superseded_by` pointing to the next edition.

@@ -44,6 +44,7 @@ The registers and the files they track:
 | `eba_consultation_papers.xlsx` | `eba-consultation-papers/` | `download_eba_publications.py cp` |
 | `ecb_supervisory_guides.xlsx` | `ecb-guides/` | `download_ecb_guides.py` |
 | `esma_library.xlsx` | `esma/` | `download_esma.py` |
+| `eba_single_rulebook.xlsx` | `eba-single-rulebook/` | `download_eba_single_rulebook.py` |
 | `bis_basel_framework.xlsx` | `bis-basel/` | `download_basel.py` |
 
 File names in `data/01-raw`:
@@ -51,6 +52,7 @@ File names in `data/01-raw`:
 - `eurlex/<SHORT_NAME>/<CELEX>.{pdf,html}`, e.g. `eurlex/CRR/02013R0575-20260626.pdf`
 - `eba-<type>/<YYYY>/<date>_<filename>_<doc_id>_v<N>.<ext>`
 - `esma/<YYYY>/<date>_<filename>_<doc_id>_v<N>.<ext>`
+- `eba-single-rulebook/<topic>/<date>_<filename>_<doc_id>_v<N>.<ext>`, e.g. `eba-single-rulebook/model-validation/2017-11-20_Guidelines_on_PD_and_LGD_estimation_EBA-GL-2017-16_<doc_id>_v1.pdf`. `<topic>` is the Single Rulebook topic in kebab-case, and the date is the document's "Last update" (or the application date)
 - `bis-basel/<STANDARD>/<CHAPTER>_<effective date>_<published date>.html`, e.g. `bis-basel/CRE/CRE36_2023-01-01_2022-12-08.html`: the chapter text of one Basel Framework version (paragraphs, footnotes, FAQs), cut from the bis.org page. The two dates come from the BIS URL and identify the version, so there is no `_vN`
 - `ecb-guides/<date>_<doc_id>_v<N>.pdf` (`doc_id` is the ECB file name without `.en.pdf`, with a `~` suffix when two entries share a file name)
 
