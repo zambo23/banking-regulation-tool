@@ -1,7 +1,15 @@
 # banking-regulation-tool
 
-A "second brain" for **EU banking regulation, focused on credit risk**.
+A "second brain" for **EU banking regulation, focus of Basel Framework**.
 
+Banking is highly regulated industry. The body of knowledge is huge, frequently updated, and not always easy to interpret correctly. Consulting companies have made a business out of it, for years hcarging banks and financial services for how to and implementation plan to be implemented. This tool is the answer to all of it - easy, fast, affordable. 
+
+With this tool you can:
+- get a free consultation or advice of specific argument (i.e. "How to derived the observed downtunr LGD")
+- write a LinkedIn Post for your clients
+- make a validation plan with all the relevant references to be take into account
+
+## How it works
 Python scripts download the official texts from EUR-Lex, the EBA, ECB Banking Supervision, ESMA and the Basel Committee (BIS), and track every version in Excel registers. An AI coding agent (Claude Code, Codex, …) then compiles those texts into an interlinked Markdown wiki. Every claim is cited to the article or paragraph, its legal force is stated, and it points to the exact file version it relies on. When a source changes, the wiki shows which articles have gone stale.
 
 It follows the *LLM Wiki* pattern popularised by Andrej Karpathy: compile the documents once into a maintained knowledge base, instead of re-reading raw PDFs for every question.
