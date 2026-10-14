@@ -260,6 +260,7 @@ Downloaded file names are listed in [docs/folder-structure.md](docs/folder-struc
 - Don't use the chapter PDFs (`.../basel-framework/<node>/chapter.pdf`): they are rendered on request, and the same link sometimes returns a different version of the chapter. The script checks the page's "Effective as of" date against the URL.
 
 ### ECB supervisory guides (`download_ecb_guides.py`)
+- The listing also carries translations of older guidelines as separate rows (about 470 of 775). They are kept with status `translation` and not checked: their file names end or start with a language code in many forms (`_bg_tra`, `_de_cor2`, `2011-188pt`, `-enbg_0`, the non-ISO `cz`/`ee`, `bg_-_jc_…`), and ESMA sometimes gives them the English title. A title with non-ASCII letters catches the rest. Checking them all used to trigger HTTP 429 rate limiting.
 
 - The guides page is rendered by JavaScript. The list itself is an HTML snippet named in the page's `data-snippets` attribute (`.../supervisoryguides_include.en.html`): `<dt isoDate>` + `<dd>` with `.title a` and an explicit English link `a[lang=en]`.
 - The list keeps old editions next to new ones. `guide_key` (lowercased title without a leading "ECB"/"SSM" and without "- consolidated version") groups them; the newest is `edition_status=current`, and older ones are `superseded` with `superseded_by` pointing to the next edition.

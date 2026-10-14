@@ -14,7 +14,7 @@ Content-Length is recorded from the download but not compared: ESMA answers HEAD
 a Content-Length of 0. New versions are saved next to the old ones (suffix _vN) and logged in the
 "history" sheet. Rows that disappear from the listing are kept with status "not listed"; rows
 without a main document are kept with status "no file", and translations (file names such as
-..._bg_tra.pdf) with status "translation", without downloading them.
+..._bg_tra.pdf, or titles in another language) with status "translation", without downloading them.
 
 Usage:
     python3 src/download_esma.py           # check all items, download new or changed files
@@ -63,8 +63,13 @@ HISTORY_COLUMNS = [
     "content_length", "sha256", "local_file", "change_reason", "downloaded_at",
 ]
 CHANGE_HEADERS = ("etag", "last_modified")  # Content-Length is unreliable on HEAD
-# the listing also carries translations of some guidelines as separate rows, e.g. esma_2015_00040100_bg_tra.pdf
-TRANSLATION = re.compile(r"[_-](bg|cs|da|de|el|es|et|fi|fr|ga|hr|hu|it|lt|lv|mt|nl|pl|pt|ro|sk|sl|sv)[_-]tra\b", re.IGNORECASE)
+# The listing also carries translations of older guidelines as separate rows. Their file names end in a
+# language code (..._bg_tra.pdf, ..._de_cor2.pdf, 2013-322_hr.pdf, 2011-188pt.pdf, ...-enbg_0.pdf, also
+# the non-ISO cz and ee) or start with one (bg_-_jc_2014_43_...). ESMA sometimes gives a translation the
+# English title, so the file name is checked first; a title with non-ASCII letters catches the rest.
+LANGUAGES = "bg|cs|cz|da|de|ee|el|es|et|fi|fr|ga|hr|hu|it|lt|lv|mt|nl|pl|pt|ro|sk|sl|sv"
+TRANSLATION_NAME = re.compile(
+    rf"(?:^|[_\-\d]|en)(?:{LANGUAGES})(?:[_-](?:tra|cor)\d*)?(?:[_-](?:\d+|bis))?_?$|^(?:{LANGUAGES})_-_", re.IGNORECASE)
 RETRIES = 3  # ESMA answers bursts with HTTP 429
 
 
@@ -85,6 +90,11 @@ class Item:
     @property
     def filename(self) -> str:
         return unquote(urlsplit(self.url).path.rsplit("/", 1)[-1])
+
+    @property
+    def is_translation(self) -> bool:
+        stem = self.filename.rpartition(".")[0] or self.filename
+        return bool(TRANSLATION_NAME.search(stem)) or any(c.isalpha() and ord(c) > 127 for c in self.title)
 
     @property
     def extension(self) -> str:
@@ -200,7 +210,7 @@ def main() -> int:
         try:
             if not item.url:
                 status = "no file"
-            elif TRANSLATION.search(item.filename):
+            elif item.is_translation:
                 status = "translation"  # English texts only; files fetched earlier are kept
             else:
                 if not prev or not prev.get("local_file"):
