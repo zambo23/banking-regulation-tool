@@ -11,6 +11,7 @@ Usage:
     uv run src/cli.py esma                   # ESMA library, section "Guidelines and Technical standards"
     uv run src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
     uv run src/cli.py eba-sr                 # EBA Single Rulebook product pages: final guidelines, RTS and ITS with status and dates
+    uv run src/cli.py md                     # convert new PDFs in data/01-raw to Markdown in data/02-raw-md (update does it too)
     uv run src/cli.py eba guidelines rts     # EBA publications listing, one or more types
     uv run src/cli.py eba reports --rescan-references   # re-read eba_reference for every downloaded file
     uv run src/cli.py graph                  # write the source map to data/04-output/<today>_source-map.html
@@ -64,13 +65,17 @@ class Log:
             self.file.flush()
 
 
-def run(jobs: list[tuple[str, list[str]]], parallel: bool, command: str) -> int:
+def run(jobs: list[tuple[str, list[str]]], parallel: bool, command: str,
+        after: list[tuple[str, list[str]]] | None = None) -> int:
     """Run the jobs, streaming their output line by line, and return the worst exit code.
 
     Every line is prefixed with the time and the job name, and copied to data/logs/. Each job's
     start and end are logged, and while jobs run a heartbeat lists them with their elapsed time.
+    The `after` jobs run one at a time once all `jobs` have finished (e.g. converting new PDFs).
     """
-    log = Log(LOG_DIR / f"{datetime.now():%Y-%m-%d_%H%M%S}_{command}.log", max(len(n) for n, _ in jobs + [("cli", [])]))
+    after = after or []
+    log = Log(LOG_DIR / f"{datetime.now():%Y-%m-%d_%H%M%S}_{command}.log",
+              max(len(n) for n, _ in jobs + after + [("cli", [])]))
     log("cli", f"{len(jobs)} job(s), {'parallel' if parallel and len(jobs) > 1 else 'one at a time'}; log: {log.path.relative_to(ROOT)}")
     env = {**os.environ, "PYTHONUNBUFFERED": "1"}  # scripts print as they go, not when their buffer fills
     running: dict[str, float] = {}
@@ -97,7 +102,7 @@ def run(jobs: list[tuple[str, list[str]]], parallel: bool, command: str) -> int:
             now = time.monotonic()
             busy = ", ".join(f"{n} ({duration(now - t)})" for n, t in list(running.items()))
             if busy:
-                log("cli", f"still running: {busy}; {len(results)}/{len(jobs)} done")
+                log("cli", f"still running: {busy}; {len(results)}/{len(jobs) + len(after)} done")
 
     begun = time.monotonic()
     threading.Thread(target=heartbeat, daemon=True).start()
@@ -113,13 +118,23 @@ def run(jobs: list[tuple[str, list[str]]], parallel: bool, command: str) -> int:
             for proc in processes:
                 proc.terminate()
             log("cli", "interrupted; running jobs stopped")
-    done.set()
     if len(results) < len(jobs):
+        done.set()
         return 130
+    try:
+        for name, cmd in after:
+            execute(name, cmd)
+    except KeyboardInterrupt:
+        for proc in processes:
+            proc.terminate()
+        log("cli", "interrupted; running jobs stopped")
+        done.set()
+        return 130
+    done.set()
 
-    if len(jobs) > 1:
+    if len(jobs) + len(after) > 1:
         log("cli", f"all jobs finished in {duration(time.monotonic() - begun)}")
-        for name, _ in jobs:
+        for name, _ in jobs + after:
             code, took = results[name]
             log("cli", f"  {name:<16} {'ok' if code == 0 else f'exit {code}':<8} {duration(took)}")
     return max(code for code, _ in results.values())
@@ -140,6 +155,8 @@ def main() -> int:
     commands.add_parser("esma", parents=[check], help="ESMA guidelines and technical standards")
     commands.add_parser("basel", parents=[check], help="Basel Framework chapters (BCBS standards)")
     commands.add_parser("eba-sr", parents=[check], help="EBA Single Rulebook product pages (final texts, status, dates)")
+    md = commands.add_parser("md", parents=[check], help="convert new PDFs in data/01-raw to Markdown in data/02-raw-md")
+    md.add_argument("--force", action="store_true", help="reconvert every PDF, e.g. after upgrading markitdown")
     eba = commands.add_parser("eba", parents=[check, sequential], help="EBA publications, one or more types")
     eba.add_argument("types", nargs="+", choices=PUBLICATION_TYPES, metavar="type",
                      help=f"one or more of: {', '.join(PUBLICATION_TYPES)}")
@@ -164,6 +181,8 @@ def main() -> int:
         jobs = [job("basel", "download_basel.py", *flags)]
     elif args.command == "eba-sr":
         jobs = [job("eba sr", "download_eba_single_rulebook.py", *flags)]
+    elif args.command == "md":
+        jobs = [job("md", "convert_pdfs.py", *flags, *(["--force"] if args.force else []))]
     elif args.command == "eba":
         eba_flags = flags + (["--rescan-references"] if args.rescan_references else [])
         jobs = [job(f"eba {t}", "download_eba_publications.py", t, *eba_flags) for t in args.types]
@@ -172,7 +191,9 @@ def main() -> int:
                 job("esma", "download_esma.py", *flags), job("basel", "download_basel.py", *flags),
                 job("eba sr", "download_eba_single_rulebook.py", *flags)]
         jobs += [job(f"eba {t}", "download_eba_publications.py", t, *flags) for t in PUBLICATION_TYPES]
-    return run(jobs, parallel=not getattr(args, "sequential", False), command=args.command)
+    # after downloading, convert the new PDFs to Markdown (data/02-raw-md)
+    after = [job("md", "convert_pdfs.py", *flags)] if args.command == "update" else []
+    return run(jobs, parallel=not getattr(args, "sequential", False), command=args.command, after=after)
 
 
 if __name__ == "__main__":

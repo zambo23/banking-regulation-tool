@@ -22,7 +22,7 @@ There is no build system, linter or test suite yet.
 
 ## Setup
 
-Dependencies (`requests`, `beautifulsoup4`, `openpyxl`) are declared in `pyproject.toml`; `uv.lock` pins their exact versions. The project is an application, not a package (`[tool.uv] package = false`), so nothing is built or installed.
+Dependencies (`requests`, `beautifulsoup4`, `openpyxl`, and `markitdown[pdf]` for the PDF-to-Markdown conversion) are declared in `pyproject.toml`; `uv.lock` pins their exact versions. The project is an application, not a package (`[tool.uv] package = false`), so nothing is built or installed.
 
 ```bash
 uv sync
@@ -42,6 +42,7 @@ uv run src/cli.py esma                   # ESMA library, section "Guidelines and
 uv run src/cli.py basel                  # Basel Framework (BCBS standards), current and forthcoming chapter versions
 uv run src/cli.py eba-sr                 # EBA Single Rulebook product pages: final texts with status and dates
 uv run src/cli.py eba guidelines rts     # EBA publications listing, one or more of: guidelines, rts, its, reports, cp
+uv run src/cli.py md                     # convert new PDFs in data/01-raw to Markdown in data/02-raw-md
 uv run src/cli.py graph                  # interactive source map, see below
 ```
 
@@ -50,8 +51,10 @@ uv run src/cli.py graph                  # interactive source map, see below
 | `--check` | all | report what is outdated; download and write nothing |
 | `--sequential` | `update`, `eba` | run one downloader at a time (default: in parallel) |
 | `--rescan-references` | `eba` | re-read `eba_reference` for every downloaded file (run after changing `EBA_REF`) |
+| `--force` | `md` | reconvert every PDF, e.g. after upgrading markitdown |
 
 - Re-running is how documents get updated. A new version is saved as a new file, never over the old one.
+- `update` ends with `md`: once every download has finished, new PDFs are converted to Markdown, in the same log. `md` converts only PDFs without a `.md` yet; the first run over about 2,000 PDFs takes 20–40 minutes, later runs seconds.
 - `eba-sr` reads about 420 product pages and their phases on every run (10–20 minutes); the first run also downloads about 1,500 files.
 - `basel` reads about 130 timeline pages (one per chapter) on every run, about two minutes; it downloads only versions it has not saved yet.
 - The EBA `reports` (~470 items) and `cp` (~490 items) listings take several minutes.

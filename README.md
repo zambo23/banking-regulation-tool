@@ -59,6 +59,7 @@ uv run src/cli.py ecb                    # ECB supervisory guides
 uv run src/cli.py esma                   # ESMA guidelines and technical standards
 uv run src/cli.py basel                  # Basel Framework chapters (BCBS standards)
 uv run src/cli.py eba-sr                 # EBA Single Rulebook product pages
+uv run src/cli.py md                     # convert new PDFs to Markdown (update does it too)
 uv run src/cli.py graph                  # interactive map of the documents and the wiki
 ```
 
@@ -89,7 +90,7 @@ Ready-made session prompts are in `docs/`: [a regulatory strategy consultant](do
 ## Repository layout
 
 ```text
-src/                    download scripts, cli.py (entry point), register.py (shared Excel code), source_map.py (map page)
+src/                    download scripts, cli.py (entry point), register.py (shared Excel code), convert_pdfs.py (PDF to Markdown), source_map.py (map page)
 data/00-source/         one Excel register per source: `documents` (current) + `history` (all versions)
 data/01-raw/            downloaded texts, never edited; old versions kept next to new ones
 data/02-raw-md/         Markdown versions of the PDFs in data/01-raw

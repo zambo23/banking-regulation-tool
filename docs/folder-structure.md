@@ -27,7 +27,7 @@ banking-regulation-tool/
 | `src/` | Python download scripts; `cli.py` is the entry point, shared Excel code is in `register.py` | developer |
 | `data/00-source/*.xlsx` | one register per source: a `documents` sheet (current state) and a `history` sheet (every downloaded version) | scripts only |
 | `data/01-raw/` | downloaded English texts (PDF, HTML, xlsx, …); old versions are kept next to new ones | scripts only |
-| `data/02-raw-md/` | Markdown versions of the PDF files in `01-raw`, for cheaper reading during `compile`. No script writes it yet | — |
+| `data/02-raw-md/` | Markdown versions of the PDF files in `01-raw`, for cheaper reading during `compile` | `convert_pdfs.py` only |
 | `data/03-wiki/` | the knowledge base | agent |
 | `data/04-output/` | disposable query results: memos, comparisons, reports, slide decks | agent |
 | `data/logs/` | one log per `cli.py` downloader run, `<YYYY-MM-DD_HHMMSS>_<command>.log`; safe to delete | `cli.py` |
@@ -64,7 +64,9 @@ A new version is saved as a new file (a new CELEX, Basel version dates or `_vN`)
 ## Markdown versions: `data/02-raw-md`
 
 - One `.md` file per PDF in `data/01-raw`, at the same relative path with the extension changed: `01-raw/eurlex/CRR/02013R0575-20260626.pdf` becomes `02-raw-md/eurlex/CRR/02013R0575-20260626.md`. A new `_vN` or CELEX version of a PDF gets its own `.md` file.
-- Derived files: never edit them by hand; regenerate them from the PDF. The converter is not chosen yet, and no script writes this folder so far.
+- Written by `src/convert_pdfs.py` with [markitdown](https://github.com/microsoft/markitdown) (`uv run src/cli.py md`; `update` runs it after the downloads). Each file starts with an HTML comment naming its source PDF and the markitdown version. Never edit them by hand: they are derived, and `--force` regenerates them.
+- When markitdown extracts less than half the words `pdftotext` finds (it occasionally misreads a PDF, e.g. the WTR), the file holds the `pdftotext -layout` text instead, and its header says so.
+- A PDF without a text layer (a scan) gets a `.md` saying so; read the PDF itself. A PDF that fails to convert gets no `.md` and is retried on the next run.
 - The wiki cites the `01-raw` file, never the `.md` file: the registers and `log.md` track `01-raw` paths and their SHA-256.
 
 ## Wiki: `data/03-wiki`

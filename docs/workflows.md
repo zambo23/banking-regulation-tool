@@ -4,7 +4,7 @@ The tasks the agent runs on this repository. The rules they rely on (scope, lega
 
 ## Update sources
 
-Run `uv run src/cli.py update` (see [tooling.md](tooling.md#commands)); it is safe to run daily. A new version of a document is saved as a new file and logged in the register's `history` sheet; nothing is overwritten. Then run `audit` to find articles that rely on outdated versions.
+Run `uv run src/cli.py update` (see [tooling.md](tooling.md#commands)); it is safe to run daily. A new version of a document is saved as a new file and logged in the register's `history` sheet; nothing is overwritten. New PDFs are then converted to Markdown in `data/02-raw-md`. Then run `audit` to find articles that rely on outdated versions.
 
 ## Regulatory watch
 
